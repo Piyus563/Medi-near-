@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Verified Doctors &amp; Specialists — MediNear AI{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Header -->
+<div class="bg-white border-bottom py-4">
+  <div class="container">
+    <div class="row align-items-center mb-3">
+      <div class="col-md-7">
+        <h1 class="h3 fw-bold mb-1">Find Verified Doctors &amp; Specialists</h1>
+        <p class="text-muted mb-0" style="font-size: 0.95rem;">
+          Browse verified medical practitioners by specialty, proximity, and consultation fees.
+        </p>
+      </div>
+      <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <span class="badge bg-light text-dark border p-2">
+          <i class="bi bi-shield-check text-success"></i> Medical Council Verified Directory
+        </span>
+      </div>
+    </div>
+
+    <!-- Filter Form -->
+    <form id="doctorsFilterForm" class="row g-2 align-items-center" method="GET" action="{{ url_for('doctors') }}">
+      <!-- Search Input -->
+      <div class="col-lg-4 col-md-6">
+        <div class="search-input-group">
+          <i class="bi bi-search icon"></i>
+          <input type="text" class="form-control" id="searchKeyword" name="q" value="{{ query or '' }}" placeholder="Doctor name, clinic, or condition...">
+        </div>
+      </div>
+
+      <!-- Specialty Dropdown -->
+      <div class="col-lg-3 col-md-6">
+        <div class="search-input-group">
+          <i class="bi bi-person-badge icon"></i>
+          <select class="form-select" id="specialtyFilter" name="specialty">
+            <option value="">All Specialties</option>
+            <option value="General Physician" {% if selected_specialty == 'General Physician' %}selected{% endif %}>General Physician</option>
+            <option value="Cardiologist" {% if selected_specialty == 'Cardiologist' %}selected{% endif %}>Cardiologist</option>
+            <option value="Dermatologist" {% if selected_specialty == 'Dermatologist' %}selected{% endif %}>Dermatologist</option>
+            <option value="Dentist" {% if selected_specialty == 'Dentist' %}selected{% endif %}>Dentist</option>
+            <option value="Pediatrician" {% if selected_specialty == 'Pediatrician' %}selected{% endif %}>Pediatrician</option>
+            <option value="Eye Specialist" {% if selected_specialty == 'Eye Specialist' %}selected{% endif %}>Eye Specialist</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- City Filter with Geolocation trigger -->
+      <div class="col-lg-3 col-md-6">
+        <div class="search-input-group">
+          <i class="bi bi-geo-alt icon"></i>
+          <input type="text" class="form-control pe-5" id="cityFilter" name="city" value="{{ selected_city or '' }}" placeholder="City / Locality">
+          <button type="button" class="btn-locate-me position-absolute end-0 me-2" data-target-input="cityFilter" title="Use current location">
+            <i class="bi bi-crosshair"></i> Auto
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Submit & Reset -->
+      <div class="col-lg-2 col-md-6 d-flex gap-2">
+        <button type="submit" class="btn btn-primary-teal flex-grow-1" id="applyFiltersBtn">
+          <i class="bi bi-funnel"></i> Filter
+        </button>
+        <a href="{{ url_for('doctors') }}" class="btn btn-outline-secondary" title="Reset all filters">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Main Listings Section -->
+<div class="container py-4">
+  <!-- Sort & Result Counts Bar -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <span class="fw-bold text-dark" id="resultsCount">{{ doctors|length }}</span>
+      <span class="text-muted">doctors found</span>
+      {% if query or selected_specialty or selected_city %}
+        <span class="badge bg-light text-muted ms-2 border">Filtered Results</span>
+      {% endif %}
+    </div>
+
+    <!-- Sort Options Dropdown -->
+    <div class="d-flex align-items-center gap-2">
+      <label for="sortSelector" class="text-muted mb-0 fw-medium" style="font-size: 0.88rem;">Sort By:</label>
+      <select class="form-select form-select-sm" id="sortSelector" style="width: 200px;">
+        <option value="distance_asc" selected>Nearest Distance</option>
+        <option value="rating_desc">Highest Rated</option>
+        <option value="experience_desc">Most Experienced</option>
+        <option value="fee_asc">Consultation Fee: Low to High</option>
+        <option value="fee_desc">Consultation Fee: High to Low</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State Indicator (Hidden by default) -->
+  <div id="doctorsLoadingSpinner" class="text-center py-5 d-none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading doctors...</span>
+    </div>
+    <div class="text-muted mt-2">Searching verified doctors...</div>
+  </div>
+
+  <!-- Doctors Card Grid -->
+  <div class="row g-4" id="doctorsCardGrid">
+    {% for doctor in doctors %}
+    <div class="col-lg-4 col-md-6 doctor-listing-item"
+         data-name="{{ doctor.name|lower }}"
+         data-specialty="{{ doctor.specialty }}"
+         data-city="{{ doctor.city|lower }}"
+         data-distance="{{ doctor.distance_km }}"
+         data-rating="{{ doctor.rating }}"
+         data-experience="{{ doctor.experience_years }}"
+         data-fee="{{ doctor.consultation_fee or 9999 }}">
+      <div class="doctor-card">
+        <div class="doctor-header-row">
+          <div class="doctor-avatar-wrap">
+            <img src="{{ doctor.avatar }}" alt="{{ doctor.name }}">
+            {% if doctor.available_today %}
+              <span class="online-indicator" title="Available Today"></span>
+            {% endif %}
+          </div>
+          <div class="doctor-info-head">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="badge-specialty">{{ doctor.specialty }}</span>
+              <button type="button" class="btn-favorite-heart" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.name }}" title="Save Doctor" aria-label="Save Doctor">
+                <i class="bi bi-heart"></i>
+              </button>
+            </div>
+            <h3 class="doctor-name mt-1">
+              <a href="{{ url_for('doctor_details', doctor_id=doctor.id) }}" class="text-dark text-decoration-none">
+                {{ doctor.name }}
+              </a>
+            </h3>
+            <div class="doctor-qualifications">{{ doctor.qualifications }}</div>
+            <div class="doctor-meta-strip">
+              <span class="doctor-rating"><i class="bi bi-star-fill"></i> {{ doctor.rating }} ({{ doctor.reviews_count }})</span>
+              <span>&bull;</span>
+              <span>{{ doctor.experience_years }} yrs exp</span>
+              <span>&bull;</span>
+              <span class="badge-distance"><i class="bi bi-geo-alt"></i> {{ doctor.distance_km }} km</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verification Badge -->
+        <div class="mb-2">
+          {% if doctor.verification_status %}
+            <span class="badge-verified"><i class="bi bi-patch-check-fill"></i> Verified Medical Practitioner</span>
+          {% else %}
+            <span class="badge-pending"><i class="bi bi-clock-history"></i> Verification In Progress</span>
+          {% endif %}
+        </div>
+
+        <!-- Clinic Address Box -->
+        <div class="doctor-clinic-box">
+          <div class="clinic-name">{{ doctor.clinic_name }}</div>
+          <div class="clinic-address">
+            <i class="bi bi-geo-alt-fill text-primary"></i>
+            <span>{{ doctor.clinic_address }}, {{ doctor.city }}</span>
+          </div>
+        </div>
+
+        <!-- Availability Strip (Shown only when present) -->
+        <div class="doctor-availability {% if doctor.available_today %}availability-open{% else %}availability-closed{% endif %}">
+          <i class="bi {% if doctor.available_today %}bi-clock-fill text-success{% else %}bi-calendar-event text-secondary{% endif %}"></i>
+          <span>{{ doctor.availability_info }}</span>
+        </div>
+
+        <!-- Languages spoken -->
+        <div class="d-flex align-items-center gap-1 mb-3 text-muted" style="font-size: 0.78rem;">
+          <i class="bi bi-translate"></i>
+          <span>{{ doctor.languages|join(', ') }}</span>
+        </div>
+
+        <!-- Card Footer with Fee & Actions -->
+        <div class="doctor-card-footer">
+          <div class="consultation-fee-wrap">
+            <span class="fee-label">Consultation Fee</span>
+            {% if doctor.consultation_fee %}
+              <span class="fee-amount">₹{{ doctor.consultation_fee }}</span>
+            {% else %}
+              <span class="fee-unverified" title="Fee verified only after credential review">Contact Clinic</span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('doctor_details', doctor_id=doctor.id) }}" class="btn btn-outline-teal btn-sm">
+              View Profile
+            </a>
+            <button type="button" class="btn btn-primary-teal btn-sm btn-request-appointment-modal" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.name }}" data-doctor-specialty="{{ doctor.specialty }}" data-doctor-fee="{{ doctor.consultation_fee }}">
+              Request
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Empty Results State (Hidden when items present) -->
+  <div id="noDoctorsEmptyState" class="empty-state-box mt-4 {% if doctors|length > 0 %}d-none{% endif %}">
+    <div class="empty-state-icon">
+      <i class="bi bi-person-slash"></i>
+    </div>
+    <h3 class="empty-state-title">No Healthcare Providers Found</h3>
+    <p class="empty-state-desc">
+      We couldn't find any doctors matching your current filters. Try expanding your search area or selecting "All Specialties".
+    </p>
+    <div class="d-flex justify-content-center gap-2">
+      <a href="{{ url_for('doctors') }}" class="btn btn-primary-teal">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset Search Filters
+      </a>
+      <a href="{{ url_for('ai_assistant') }}" class="btn btn-outline-teal">
+        <i class="bi bi-stars"></i> Ask AI Specialty Assistant
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Shared Appointment Request Modal -->
+{% include 'components/appointment_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/doctors.js') }}"></script>
+<script src="{{ url_for('static', filename='js/appointments.js') }}"></script>
+{% endblock %}

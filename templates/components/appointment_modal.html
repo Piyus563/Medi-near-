@@ -1,0 +1,136 @@
+<!-- Reusable Appointment Request Modal -->
+<div class="modal fade" id="appointmentBookingModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="modal-header bg-light py-3 px-4 border-bottom">
+        <div>
+          <div class="badge-specialty mb-1" id="modalDoctorSpecialty">Specialty</div>
+          <h5 class="modal-title fw-bold" id="appointmentModalLabel">Request Doctor Appointment</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-4">
+        <!-- Doctor Quick Summary Banner -->
+        <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-4 bg-primary-subtle border border-primary-subtle">
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar-sm rounded-circle bg-white p-1 shadow-sm" style="width: 48px; height: 48px;">
+              <img src="/static/images/doctor-placeholder.svg" alt="Doctor" class="w-100 h-100 rounded-circle object-fit-cover">
+            </div>
+            <div>
+              <h6 class="fw-bold mb-0 text-dark" id="modalDoctorName">Doctor Name</h6>
+              <div class="text-muted" style="font-size: 0.82rem;"><i class="bi bi-patch-check-fill text-success"></i> MediNear Verified Provider</div>
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="text-muted d-block" style="font-size: 0.75rem; text-transform: uppercase;">Estimated Fee</span>
+            <span class="fw-bold fs-5 text-primary" id="modalDoctorFee">₹600</span>
+          </div>
+        </div>
+
+        <!-- Appointment Form -->
+        <form id="appointmentRequestForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" id="modalDoctorId" name="doctor_id" value="">
+
+          <div class="row g-3">
+            <!-- Patient Name -->
+            <div class="col-md-6">
+              <label for="patientNameInput" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Patient Full Name <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="patientNameInput" name="patient_name" placeholder="e.g. Rahul Sharma" required>
+              <div class="invalid-feedback">Please enter the patient's full name.</div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="col-md-6">
+              <label for="patientPhoneInput" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Mobile Phone <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">+91</span>
+                <input type="tel" class="form-control" id="patientPhoneInput" name="patient_phone" placeholder="98765 43210" pattern="[0-9]{10}" required>
+              </div>
+              <div class="invalid-feedback">Please enter a valid 10-digit mobile number.</div>
+            </div>
+
+            <!-- Email (Optional) -->
+            <div class="col-md-6">
+              <label for="patientEmailInput" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Email Address (For receipt)
+              </label>
+              <input type="email" class="form-control" id="patientEmailInput" name="patient_email" placeholder="name@example.com">
+            </div>
+
+            <!-- Consultation Type -->
+            <div class="col-md-6">
+              <label for="consultationModeSelect" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Consultation Mode <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="consultationModeSelect" name="mode" required>
+                <option value="In-Person Clinic Visit" selected>In-Person Clinic Visit</option>
+                <option value="Online Video Consultation">Online Video Consultation</option>
+              </select>
+            </div>
+
+            <!-- Preferred Date -->
+            <div class="col-md-6">
+              <label for="appointmentDateInput" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Preferred Date <span class="text-danger">*</span>
+              </label>
+              <input type="date" class="form-control" id="appointmentDateInput" name="date" required>
+              <div class="invalid-feedback">Please select a valid upcoming date.</div>
+            </div>
+
+            <!-- Preferred Time Slot -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Available Time Slot <span class="text-danger">*</span>
+              </label>
+              <div class="d-flex flex-wrap gap-2" id="timeSlotPills">
+                <input type="radio" class="btn-check" name="time_slot" id="slot1" value="10:00 AM" checked required>
+                <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slot1">10:00 AM</label>
+
+                <input type="radio" class="btn-check" name="time_slot" id="slot2" value="11:30 AM">
+                <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slot2">11:30 AM</label>
+
+                <input type="radio" class="btn-check" name="time_slot" id="slot3" value="03:00 PM">
+                <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slot3">03:00 PM</label>
+
+                <input type="radio" class="btn-check" name="time_slot" id="slot4" value="05:30 PM">
+                <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slot4">05:30 PM</label>
+
+                <input type="radio" class="btn-check" name="time_slot" id="slot5" value="07:00 PM">
+                <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slot5">07:00 PM</label>
+              </div>
+            </div>
+
+            <!-- Reason / Symptoms Note -->
+            <div class="col-12">
+              <label for="patientSymptomsInput" class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">
+                Brief Symptoms or Reason for Visit <span class="text-muted fw-normal">(Optional)</span>
+              </label>
+              <textarea class="form-control" id="patientSymptomsInput" name="symptoms" rows="2" placeholder="Describe any symptoms, duration or previous reports..."></textarea>
+            </div>
+          </div>
+
+          <!-- Disclaimer / Submission Note -->
+          <div class="alert alert-light border mt-3 mb-0 py-2 px-3 text-muted" style="font-size: 0.8rem;">
+            <i class="bi bi-shield-check text-primary me-1"></i>
+            <strong>Data Privacy Note:</strong> Your appointment request is routed directly to the provider's desk. This prototype records requests temporarily in session data for demonstration purposes.
+          </div>
+
+          <div class="modal-footer border-0 px-0 pb-0 pt-3 mt-3 d-flex justify-content-between">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-teal px-4" id="submitAppointmentBtn">
+              <i class="bi bi-calendar-check-fill"></i> Confirm Appointment Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

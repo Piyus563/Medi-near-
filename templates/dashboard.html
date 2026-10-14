@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Portal &amp; Appointments — MediNear AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-layout">
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="row align-items-center">
+      <div class="col-md-8 d-flex align-items-center gap-3">
+        <div class="welcome-avatar-box">
+          {{ (current_user.name if current_user else (patient.name if patient else 'Arun Kumar'))[:2].upper() }}
+        </div>
+        <div>
+          <span class="badge bg-white bg-opacity-25 text-white mb-1 px-2 py-1 rounded-pill" style="font-size: 0.75rem;">
+            <i class="bi bi-person-check-fill"></i> Verified Patient Account
+          </span>
+          <h1 class="h3 fw-bold mb-1 text-white">Welcome back, {{ current_user.name if current_user else (patient.name if patient else 'Arun Kumar') }}</h1>
+          <p class="text-white-50 mb-0" style="font-size: 0.9rem;">
+            MediNear Patient ID: <strong>MED-{{ current_user.id if current_user else (patient.id if patient else '982410') }}</strong> &bull; Registered Phone: +91 {{ current_user.phone if current_user else (patient.phone if patient else '9876543210') }}
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('doctors') }}" class="btn btn-light fw-semibold shadow-sm">
+          <i class="bi bi-plus-circle-fill text-primary"></i> Book New Appointment
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-teal">
+          <i class="bi bi-calendar-check-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="kpiUpcomingCount">2</div>
+          <div class="stat-label">Upcoming Appointments</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-blue">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="kpiPastCount">1</div>
+          <div class="stat-label">Completed Consultations</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 col-sm-12">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-mint">
+          <i class="bi bi-heart-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="kpiSavedCount">0</div>
+          <div class="stat-label">Saved Healthcare Providers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Navigation Tabs -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <ul class="nav custom-nav-pills" id="dashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcomingAppointmentsTab" type="button" role="tab">
+          <i class="bi bi-calendar2-event me-1"></i> Upcoming Visits (<span id="tabUpcomingCount">2</span>)
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#appointmentHistoryTab" type="button" role="tab">
+          <i class="bi bi-clock-history me-1"></i> Visit History
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="saved-tab" data-bs-toggle="pill" data-bs-target="#savedDoctorsTab" type="button" role="tab">
+          <i class="bi bi-bookmark-heart me-1"></i> Saved Doctors (<span id="tabSavedCount">0</span>)
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="profile-tab" data-bs-toggle="pill" data-bs-target="#patientProfileTab" type="button" role="tab">
+          <i class="bi bi-person-lines-fill me-1"></i> Profile &amp; Settings
+        </button>
+      </li>
+    </ul>
+
+    <div class="text-muted" style="font-size: 0.82rem;">
+      <i class="bi bi-arrow-repeat text-primary"></i> Live Session Records
+    </div>
+  </div>
+
+  <!-- Tab Content Area -->
+  <div class="tab-content" id="dashboardTabsContent">
+    <!-- Tab 1: Upcoming Appointments -->
+    <div class="tab-pane fade show active" id="upcomingAppointmentsTab" role="tabpanel">
+      <div class="appointment-table-wrap">
+        <div class="table-responsive">
+          <table class="table appointment-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Doctor &amp; Specialty</th>
+                <th>Clinic / Facility</th>
+                <th>Date &amp; Slot</th>
+                <th>Consultation Mode</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="upcomingAppointmentsTbody">
+              {% for apt in appointments if apt.status in ['Confirmed', 'Pending', 'Pending Confirmation'] %}
+              <tr class="appointment-row" data-id="{{ apt.booking_ref or apt.id }}">
+                <td><span class="badge bg-light text-dark border">{{ apt.booking_ref or apt.id }}</span></td>
+                <td>
+                  <div class="fw-bold text-dark">{{ apt.doctor_name }}</div>
+                  <div class="text-muted" style="font-size: 0.8rem;">{{ apt.specialty }}</div>
+                </td>
+                <td>
+                  <div class="text-secondary" style="font-size: 0.85rem;"><i class="bi bi-geo-alt text-primary"></i> {{ apt.clinic }}</div>
+                  <div class="text-muted" style="font-size: 0.78rem;">Est. Fee: {{ apt.fee }}</div>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark">{{ apt.date }}</div>
+                  <div class="text-primary fw-medium" style="font-size: 0.82rem;"><i class="bi bi-clock"></i> {{ apt.time_slot }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-secondary border">{{ apt.mode }}</span>
+                </td>
+                <td>
+                  <span class="{{ apt.badge_class }}"><i class="bi bi-check-circle"></i> {{ apt.status }}</span>
+                </td>
+                <td class="text-end">
+                  {% if apt.can_cancel %}
+                  <button type="button" class="btn btn-outline-danger btn-sm btn-trigger-cancel" data-id="{{ apt.booking_ref or apt.id }}" data-doctor="{{ apt.doctor_name }}">
+                    <i class="bi bi-x-circle"></i> Cancel
+                  </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State for Upcoming Visits -->
+      <div id="noUpcomingEmptyState" class="empty-state-box mt-3 d-none">
+        <div class="empty-state-icon">
+          <i class="bi bi-calendar2-check"></i>
+        </div>
+        <h3 class="empty-state-title">No Upcoming Appointments</h3>
+        <p class="empty-state-desc">
+          You currently have no scheduled appointments. Discover nearby doctors or check hospitals in your neighborhood.
+        </p>
+        <a href="{{ url_for('doctors') }}" class="btn btn-primary-teal">
+          <i class="bi bi-search"></i> Find &amp; Book Doctors
+        </a>
+      </div>
+    </div>
+
+    <!-- Tab 2: Appointment History -->
+    <div class="tab-pane fade" id="appointmentHistoryTab" role="tabpanel">
+      <div class="appointment-table-wrap">
+        <div class="table-responsive">
+          <table class="table appointment-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Doctor &amp; Specialty</th>
+                <th>Date &amp; Time</th>
+                <th>Status</th>
+                <th>Receipt / Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for apt in appointments if apt.status == 'Completed' %}
+              <tr>
+                <td><span class="badge bg-light text-dark border">{{ apt.booking_ref or apt.id }}</span></td>
+                <td>
+                  <div class="fw-bold text-dark">{{ apt.doctor_name }}</div>
+                  <div class="text-muted" style="font-size: 0.8rem;">{{ apt.specialty }}</div>
+                </td>
+                <td>
+                  <div class="fw-medium text-dark">{{ apt.date }} &bull; {{ apt.time_slot }}</div>
+                  <div class="text-muted" style="font-size: 0.8rem;">{{ apt.clinic }}</div>
+                </td>
+                <td>
+                  <span class="{{ apt.badge_class }}"><i class="bi bi-check-all"></i> {{ apt.status }}</span>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-outline-teal btn-sm" onclick="showToast('Downloading consultation summary receipt...', 'info');">
+                    <i class="bi bi-download"></i> Receipt
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Saved Doctors -->
+    <div class="tab-pane fade" id="savedDoctorsTab" role="tabpanel">
+      <div class="row g-4" id="savedDoctorsGrid">
+        <!-- Rendered dynamically via JavaScript from localStorage -->
+      </div>
+      <div id="noSavedDoctorsEmpty" class="empty-state-box">
+        <div class="empty-state-icon text-muted bg-light">
+          <i class="bi bi-heart"></i>
+        </div>
+        <h3 class="empty-state-title">No Saved Doctors Yet</h3>
+        <p class="empty-state-desc">
+          Click the heart icon on any doctor listing card to bookmark your preferred healthcare providers for quick booking.
+        </p>
+        <a href="{{ url_for('doctors') }}" class="btn btn-primary-teal">
+          <i class="bi bi-search"></i> Explore Doctors Directory
+        </a>
+      </div>
+    </div>
+
+    <!-- Tab 4: Patient Profile Details -->
+    <div class="tab-pane fade" id="patientProfileTab" role="tabpanel">
+      <div class="medinear-card p-4">
+        <h2 class="h5 fw-bold mb-3"><i class="bi bi-person-circle text-primary me-2"></i>Patient Profile Information</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label text-muted" style="font-size: 0.82rem;">Full Name</label>
+            <input type="text" class="form-control" value="{{ current_user.name if current_user else (patient.name if patient else 'Arun Kumar') }}" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted" style="font-size: 0.82rem;">Registered Mobile</label>
+            <input type="text" class="form-control" value="+91 {{ current_user.phone if current_user else (patient.phone if patient else '9876543210') }}" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted" style="font-size: 0.82rem;">Email</label>
+            <input type="email" class="form-control" value="{{ current_user.email if current_user else (patient.email if patient else 'patient@example.com') }}" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted" style="font-size: 0.82rem;">Blood Group</label>
+            <input type="text" class="form-control" value="{{ current_user.blood_group if current_user else (patient.blood_group if patient else 'B+ (Positive)') }}" readonly>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted" style="font-size: 0.82rem;">Emergency Contact Number</label>
+            <input type="text" class="form-control" value="{{ current_user.emergency_contact if current_user else (patient.emergency_contact if patient else '+91 98110 00000 (Spouse)') }}" readonly>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+          <span class="text-muted" style="font-size: 0.8rem;">Profile verification completed on Oct 10, 2026</span>
+          <button type="button" class="btn btn-outline-teal btn-sm" onclick="showToast('Profile editing will connect to Flask backend account settings.', 'info');">
+            <i class="bi bi-pencil-square"></i> Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Appointment Confirmation Modal -->
+<div class="modal fade" id="cancelAppointmentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header py-3 px-4 border-bottom bg-danger-subtle text-danger">
+        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Cancel Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="mb-2">Are you sure you want to cancel your appointment with <strong id="cancelDoctorNameTarget">Doctor</strong>?</p>
+        <p class="text-muted" style="font-size: 0.85rem;">Booking Reference: <code id="cancelAppointmentIdTarget">APT-0000</code></p>
+        <div class="mb-3">
+          <label class="form-label text-dark fw-semibold" style="font-size: 0.88rem;">Reason for Cancellation (Optional)</label>
+          <select class="form-select" id="cancelReasonSelect">
+            <option value="Schedule Conflict">Schedule Conflict</option>
+            <option value="Symptoms Resolved">Symptoms Resolved / Feeling Better</option>
+            <option value="Rescheduled Directly with Clinic">Rescheduled Directly with Clinic</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep Appointment</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmCancellation">
+          <i class="bi bi-trash3"></i> Yes, Cancel Appointment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Sync client-side localStorage appointments
+  syncCustomAppointments();
+  // Sync saved doctors from localStorage
+  syncSavedDoctors();
+
+  // Cancel Appointment Modal Logic
+  let targetRow = null;
+  let targetId = '';
+  const cancelModalEl = document.getElementById('cancelAppointmentModal');
+  const cancelModal = cancelModalEl ? new bootstrap.Modal(cancelModalEl) : null;
+  const docNameTarget = document.getElementById('cancelDoctorNameTarget');
+  const idTarget = document.getElementById('cancelAppointmentIdTarget');
+
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('.btn-trigger-cancel');
+    if (!trigger) return;
+
+    targetRow = trigger.closest('.appointment-row');
+    targetId = trigger.getAttribute('data-id');
+    const doctor = trigger.getAttribute('data-doctor');
+
+    if (docNameTarget) docNameTarget.textContent = doctor;
+    if (idTarget) idTarget.textContent = targetId;
+
+    if (cancelModal) cancelModal.show();
+  });
+
+  const confirmCancelBtn = document.getElementById('btnConfirmCancellation');
+  if (confirmCancelBtn) {
+    confirmCancelBtn.addEventListener('click', async () => {
+      const reason = document.getElementById('cancelReasonSelect')?.value || 'Patient request';
+      confirmCancelBtn.disabled = true;
+      confirmCancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Cancelling...';
+
+      try {
+        const response = await fetch(`/api/appointments/${encodeURIComponent(targetId)}/cancel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          },
+          body: JSON.stringify({ reason: reason })
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          if (targetRow) {
+            const statusBadge = targetRow.querySelector('.badge-status-confirmed, .badge-status-pending');
+            if (statusBadge) {
+              statusBadge.className = 'badge-status-cancelled';
+              statusBadge.innerHTML = '<i class="bi bi-x-circle"></i> Cancelled';
+            }
+            const actionCell = targetRow.querySelector('td:last-child');
+            if (actionCell) {
+              actionCell.innerHTML = '<span class="text-muted" style="font-size:0.8rem;">Cancelled</span>';
+            }
+          }
+          if (cancelModal) cancelModal.hide();
+          showToast(result.message || `Appointment ${targetId} cancelled successfully.`, 'info');
+          updateUpcomingBadgeCounts();
+        } else {
+          showToast(result.message || 'Could not cancel appointment.', 'warning');
+        }
+      } catch (err) {
+        showToast('Connection error while cancelling.', 'error');
+      } finally {
+        confirmCancelBtn.disabled = false;
+        confirmCancelBtn.innerHTML = '<i class="bi bi-trash3"></i> Yes, Cancel Appointment';
+      }
+    });
+  }
+
+  function syncCustomAppointments() {
+    try {
+      const key = 'medinear_custom_appointments';
+      const customApts = JSON.parse(localStorage.getItem(key) || '[]');
+      const tbody = document.getElementById('upcomingAppointmentsTbody');
+      if (!tbody || customApts.length === 0) return;
+
+      customApts.forEach(apt => {
+        // Check if already in table
+        if (tbody.querySelector(`[data-id="${apt.id}"]`)) return;
+
+        const tr = document.createElement('tr');
+        tr.className = 'appointment-row';
+        tr.setAttribute('data-id', apt.id);
+        tr.innerHTML = `
+          <td><span class="badge bg-light text-dark border">${apt.id}</span></td>
+          <td>
+            <div class="fw-bold text-dark">${apt.doctor_name}</div>
+            <div class="text-muted" style="font-size: 0.8rem;">${apt.specialty}</div>
+          </td>
+          <td>
+            <div class="text-secondary" style="font-size: 0.85rem;"><i class="bi bi-geo-alt text-primary"></i> ${apt.clinic}</div>
+            <div class="text-muted" style="font-size: 0.78rem;">Est. Fee: ${apt.fee}</div>
+          </td>
+          <td>
+            <div class="fw-semibold text-dark">${apt.date}</div>
+            <div class="text-primary fw-medium" style="font-size: 0.82rem;"><i class="bi bi-clock"></i> ${apt.time_slot}</div>
+          </td>
+          <td>
+            <span class="badge bg-light text-secondary border">${apt.mode}</span>
+          </td>
+          <td>
+            <span class="badge-status-confirmed"><i class="bi bi-check-circle"></i> Confirmed</span>
+          </td>
+          <td class="text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm btn-trigger-cancel" data-id="${apt.id}" data-doctor="${apt.doctor_name}">
+              <i class="bi bi-x-circle"></i> Cancel
+            </button>
+          </td>
+        `;
+        tbody.prepend(tr);
+      });
+
+      updateUpcomingBadgeCounts();
+    } catch (err) {
+      console.error('Error syncing custom appointments:', err);
+    }
+  }
+
+  function updateUpcomingBadgeCounts() {
+    const tbody = document.getElementById('upcomingAppointmentsTbody');
+    const emptyState = document.getElementById('noUpcomingEmptyState');
+    if (!tbody) return;
+
+    const activeRows = tbody.querySelectorAll('.badge-status-confirmed, .badge-status-pending').length;
+    const countSpan = document.getElementById('kpiUpcomingCount');
+    const tabCount = document.getElementById('tabUpcomingCount');
+
+    if (countSpan) countSpan.textContent = activeRows;
+    if (tabCount) tabCount.textContent = activeRows;
+
+    if (emptyState) {
+      if (activeRows === 0) emptyState.classList.remove('d-none');
+      else emptyState.classList.add('d-none');
+    }
+  }
+
+  function syncSavedDoctors() {
+    const favs = getFavoriteDoctors();
+    const countEl = document.getElementById('kpiSavedCount');
+    const tabCount = document.getElementById('tabSavedCount');
+    const savedGrid = document.getElementById('savedDoctorsGrid');
+    const noSavedEmpty = document.getElementById('noSavedDoctorsEmpty');
+
+    if (countEl) countEl.textContent = favs.length;
+    if (tabCount) tabCount.textContent = favs.length;
+
+    if (favs.length > 0 && savedGrid && noSavedEmpty) {
+      noSavedEmpty.classList.add('d-none');
+      savedGrid.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-light border d-flex align-items-center justify-content-between">
+            <span>You have <strong>${favs.length}</strong> bookmarked provider(s) saved to this session.</span>
+            <a href="/doctors" class="btn btn-primary-teal btn-sm">Browse All Doctors</a>
+          </div>
+        </div>
+      `;
+    }
+  }
+});
+</script>
+{% endblock %}

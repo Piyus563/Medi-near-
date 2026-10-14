@@ -1,0 +1,323 @@
+/* ===================================================================
+   MediNear AI — Dashboards (Patient & Admin Portal) Stylesheet
+   =================================================================== */
+
+.dashboard-layout {
+  padding: 2.5rem 0 4rem;
+}
+
+/* User Greeting Banner */
+.welcome-banner {
+  background: linear-gradient(135deg, #087F8C 0%, #1E40AF 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem 2.5rem;
+  color: #FFFFFF;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+  pointer-events: none;
+}
+
+.welcome-avatar-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+/* KPI Stat Cards */
+.stat-kpi-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.stat-kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-kpi-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-icon-teal {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.stat-icon-blue {
+  background-color: var(--secondary-light);
+  color: var(--secondary);
+}
+
+.stat-icon-mint {
+  background-color: var(--accent-mint-light);
+  color: var(--accent-mint-dark);
+}
+
+.stat-icon-amber {
+  background-color: var(--accent-warning-light);
+  color: #B45309;
+}
+
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Tabs & Filter Pill Nav */
+.custom-nav-pills {
+  background-color: #E2E8F0;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  gap: 4px;
+}
+
+.custom-nav-pills .nav-link {
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary) !important;
+  padding: 0.45rem 1rem !important;
+  border: none;
+}
+
+.custom-nav-pills .nav-link.active {
+  background-color: #FFFFFF !important;
+  color: var(--primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Appointment Table and Cards */
+.appointment-table-wrap {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.appointment-table th {
+  background-color: var(--bg-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.appointment-table td {
+  padding: 1.1rem 1.25rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.9rem;
+}
+
+.appointment-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status Badges */
+.badge-status-confirmed {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-status-pending {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-status-completed {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-status-cancelled {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Empty States */
+.empty-state-box {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-color);
+}
+
+.empty-state-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1.25rem;
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.empty-state-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  max-width: 440px;
+  margin: 0 auto 1.5rem;
+}
+
+/* ===================================================================
+   Admin Portal Layout
+   =================================================================== */
+.admin-sidebar {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.92rem;
+  transition: var(--transition);
+}
+
+.admin-sidebar-link:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.admin-sidebar-link.active {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Provider Status Toggles */
+.provider-toggle-btn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: #FFFFFF;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.provider-toggle-btn:hover {
+  background-color: var(--bg-muted);
+}
+
+.provider-toggle-btn.btn-verified {
+  color: var(--accent-mint-dark);
+  border-color: rgba(16, 185, 129, 0.3);
+  background-color: var(--accent-mint-light);
+}
+
+.provider-toggle-btn.btn-pending {
+  color: #B45309;
+  border-color: rgba(245, 158, 11, 0.3);
+  background-color: var(--accent-warning-light);
+}

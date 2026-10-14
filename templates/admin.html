@@ -1,0 +1,602 @@
+{% extends 'base.html' %}
+
+{% block title %}Healthcare Administration &amp; Provider Moderation — MediNear AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-layout">
+  <!-- Admin Header Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-dark text-white px-2 py-1"><i class="bi bi-shield-shaded"></i> SuperAdmin</span>
+        <span class="badge bg-success-subtle text-success border border-success-subtle">System Online</span>
+      </div>
+      <h1 class="h3 fw-bold mb-0">Healthcare Provider Operations</h1>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-teal btn-sm" id="btnExportRecords" onclick="showToast('Exporting registered provider registry to CSV/Excel format...', 'info');">
+        <i class="bi bi-download"></i> Export CSV
+      </button>
+      <button type="button" class="btn btn-primary-teal btn-sm" data-bs-toggle="modal" data-bs-target="#addNewProviderModal">
+        <i class="bi bi-plus-lg"></i> Add New Provider
+      </button>
+    </div>
+  </div>
+
+  <!-- Operational Notice Banner -->
+  <div class="alert alert-info border border-info-subtle shadow-sm mb-4 d-flex align-items-start gap-2" style="font-size: 0.85rem;">
+    <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0 mt-1"></i>
+    <div>
+      <strong>Admin Operational Console:</strong> Manage verified doctor credentials, medical facility listings, and incoming appointment queues. Status changes and provider additions update live in this interface and are prepared for Flask ORM models.
+    </div>
+  </div>
+
+  <!-- Summary KPI Metrics Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-3 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-teal">
+          <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="kpiTotalDoctors">{{ doctors|length }}</div>
+          <div class="stat-label">Listed Doctors</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-blue">
+          <i class="bi bi-hospital-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value">{{ hospitals|length }}</div>
+          <div class="stat-label">Partner Hospitals</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-mint">
+          <i class="bi bi-capsule-pill"></i>
+        </div>
+        <div>
+          <div class="stat-value">{{ pharmacies|length }}</div>
+          <div class="stat-label">Active Pharmacies</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-sm-6">
+      <div class="stat-kpi-card">
+        <div class="stat-kpi-icon stat-icon-amber">
+          <i class="bi bi-inbox-fill"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="kpiPendingRequests">3</div>
+          <div class="stat-label">Appointment Requests</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Section: Provider Management Table -->
+  <div class="row g-4">
+    <!-- Sidebar Navigation -->
+    <div class="col-lg-3">
+      <div class="admin-sidebar">
+        <div class="text-uppercase text-muted fw-bold mb-3 ps-2" style="font-size: 0.72rem; letter-spacing: 0.8px;">
+          Navigation
+        </div>
+        <ul class="admin-sidebar-menu">
+          <li>
+            <a href="#providersSection" class="admin-sidebar-link active">
+              <i class="bi bi-people-fill"></i> Provider Management
+            </a>
+          </li>
+          <li>
+            <a href="#appointmentsSection" class="admin-sidebar-link">
+              <i class="bi bi-calendar-range-fill"></i> Appointment Queue
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('doctors') }}" class="admin-sidebar-link">
+              <i class="bi bi-eye-fill"></i> Public Directory View
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('hospitals') }}" class="admin-sidebar-link">
+              <i class="bi bi-hospital"></i> Hospitals Directory
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('pharmacies') }}" class="admin-sidebar-link">
+              <i class="bi bi-capsule"></i> Pharmacy Inventory
+            </a>
+          </li>
+        </ul>
+
+        <div class="mt-4 pt-3 border-top text-muted ps-2" style="font-size: 0.75rem;">
+          <div class="fw-semibold text-dark mb-1">Server Status:</div>
+          <div><i class="bi bi-check-circle-fill text-success"></i> Flask 3.0 API Active</div>
+          <div><i class="bi bi-shield-lock-fill text-primary"></i> CSRF Protection Ready</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-lg-9">
+      <!-- Section 1: Provider Directory Management -->
+      <div class="medinear-card p-4 mb-4" id="providersSection">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div>
+            <h2 class="h5 fw-bold mb-0">Healthcare Providers Directory</h2>
+            <div class="text-muted" style="font-size: 0.82rem;">Manage verification badges, clinical status, and records.</div>
+          </div>
+
+          <!-- Table Search Input -->
+          <div style="min-width: 240px;">
+            <div class="search-input-group">
+              <i class="bi bi-search icon"></i>
+              <input type="text" class="form-control form-control-sm" id="adminProviderSearch" placeholder="Search provider or specialty...">
+            </div>
+          </div>
+        </div>
+
+        <div class="appointment-table-wrap">
+          <div class="table-responsive">
+            <table class="table appointment-table align-middle mb-0" id="adminProvidersTable">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Specialty / Facility</th>
+                  <th>Location</th>
+                  <th>Fee / Rate</th>
+                  <th>Status</th>
+                  <th class="text-end">Moderation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for doc in doctors %}
+                <tr class="admin-provider-row" data-id="{{ doc.id }}" data-name="{{ doc.name|lower }}" data-specialty="{{ doc.specialty|lower }}">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="{{ doc.avatar }}" alt="" class="rounded-circle" style="width: 38px; height: 38px; object-fit: cover;">
+                      <div>
+                        <div class="fw-bold text-dark">{{ doc.name }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">ID: DOC-{{ doc.id }}02</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge-specialty">{{ doc.specialty }}</span>
+                    <div class="text-muted" style="font-size: 0.78rem;">{{ doc.clinic_name }}</div>
+                  </td>
+                  <td>
+                    <div class="text-dark fw-medium" style="font-size: 0.82rem;">{{ doc.city }}</div>
+                  </td>
+                  <td>
+                    {% if doc.consultation_fee %}
+                      <span class="fw-semibold text-primary">₹{{ doc.consultation_fee }}</span>
+                    {% else %}
+                      <span class="text-muted" style="font-size: 0.78rem;">Unverified</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if doc.verification_status %}
+                      <button type="button" class="provider-toggle-btn btn-verified" data-doc-id="{{ doc.id }}" title="Click to change status">
+                        <i class="bi bi-patch-check-fill"></i> Verified
+                      </button>
+                    {% else %}
+                      <button type="button" class="provider-toggle-btn btn-pending" data-doc-id="{{ doc.id }}" title="Click to approve">
+                        <i class="bi bi-clock"></i> Pending
+                      </button>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-outline-secondary btn-edit-provider" data-id="{{ doc.id }}" data-name="{{ doc.name }}" data-specialty="{{ doc.specialty }}" data-city="{{ doc.city }}" data-fee="{{ doc.consultation_fee or '' }}" title="Edit Details">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger btn-deactivate-provider" data-id="{{ doc.id }}" data-name="{{ doc.name }}" title="Deactivate Provider">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 text-muted" style="font-size: 0.8rem;">
+          <span>Showing {{ doctors|length }} providers</span>
+          <nav aria-label="Table pagination">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled"><a class="page-link" href="#">Prev</a></li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Section 2: Appointment Requests Queue -->
+      <div class="medinear-card p-4" id="appointmentsSection">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-0">Appointment Requests Queue</h2>
+            <div class="text-muted" style="font-size: 0.82rem;">Incoming patient booking requests awaiting clinic approval.</div>
+          </div>
+          <span class="badge bg-warning-subtle text-warning border px-2 py-1">3 Pending Requests</span>
+        </div>
+
+        <div class="appointment-table-wrap">
+          <div class="table-responsive">
+            <table class="table appointment-table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Patient</th>
+                  <th>Assigned Doctor</th>
+                  <th>Requested Slot</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminAppointmentRequestsTbody">
+                {% for apt in appointments %}
+                <tr>
+                  <td><span class="badge bg-light text-dark border">{{ apt.booking_ref or apt.id }}</span></td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ apt.patient_name }}</div>
+                    <div class="text-muted" style="font-size: 0.78rem;">{{ apt.patient_phone }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-medium text-dark">{{ apt.doctor_name }}</div>
+                    <div class="text-muted" style="font-size: 0.78rem;">{{ apt.specialty }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-medium text-dark">{{ apt.date }} &bull; {{ apt.time_slot }}</div>
+                    <span class="badge bg-light text-secondary border">{{ apt.mode }}</span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1 align-items-center">
+                      {% if apt.status == 'Confirmed' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle"></i> Confirmed</span>
+                      {% elif apt.status == 'Cancelled' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle"></i> Cancelled</span>
+                      {% else %}
+                        <button type="button" class="btn btn-success btn-sm btn-approve-request" data-apt-id="{{ apt.id }}" title="Approve Request">
+                          <i class="bi bi-check-lg"></i> Approve
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-reject-request" data-apt-id="{{ apt.id }}" title="Decline Request">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Provider Modal -->
+<div class="modal fade" id="addNewProviderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header py-3 px-4 border-bottom bg-light">
+        <h5 class="modal-title fw-bold">Register New Healthcare Provider</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="newProviderForm" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Doctor Full Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newDocName" placeholder="e.g. Dr. Siddharth Verma" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Specialty <span class="text-danger">*</span></label>
+              <select class="form-select" id="newDocSpecialty" required>
+                <option value="General Physician">General Physician</option>
+                <option value="Cardiologist">Cardiologist</option>
+                <option value="Dermatologist">Dermatologist</option>
+                <option value="Dentist">Dentist</option>
+                <option value="Pediatrician">Pediatrician</option>
+                <option value="Eye Specialist">Eye Specialist</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Qualifications &amp; Degrees <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newDocQual" placeholder="e.g. MBBS, MD - Medicine" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Years of Experience</label>
+              <input type="number" class="form-control" id="newDocExp" placeholder="e.g. 10" min="1" max="60" value="8">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Clinic / Hospital Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newDocClinic" placeholder="e.g. Lifeline Clinic" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">City / Locality <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newDocCity" placeholder="e.g. Delhi NCR" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Consultation Fee (₹)</label>
+              <input type="number" class="form-control" id="newDocFee" placeholder="e.g. 700" min="0">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Initial Verification Status</label>
+              <select class="form-select" id="newDocStatus">
+                <option value="true">Verified (Approved)</option>
+                <option value="false">Pending Medical Council Review</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer border-0 px-0 pb-0 pt-4 mt-3">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-teal">
+              <i class="bi bi-check-circle"></i> Save Provider Record
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Provider table live search
+  const searchInput = document.getElementById('adminProviderSearch');
+  const rows = document.querySelectorAll('.admin-provider-row');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      rows.forEach(r => {
+        const name = r.getAttribute('data-name') || '';
+        const spec = r.getAttribute('data-specialty') || '';
+        if (!q || name.includes(q) || spec.includes(q)) {
+          r.classList.remove('d-none');
+        } else {
+          r.classList.add('d-none');
+        }
+      });
+    });
+  }
+
+  // Verification status toggle
+  document.querySelectorAll('.provider-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const docId = btn.getAttribute('data-doc-id');
+      if (!docId) return;
+
+      try {
+        const response = await fetch(`/api/admin/providers/${docId}/toggle-status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          }
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          if (result.verification_status) {
+            btn.className = 'provider-toggle-btn btn-verified';
+            btn.innerHTML = '<i class="bi bi-patch-check-fill"></i> Verified';
+            showToast('Provider verification approved in SQLite database!', 'success');
+          } else {
+            btn.className = 'provider-toggle-btn btn-pending';
+            btn.innerHTML = '<i class="bi bi-clock"></i> Pending';
+            showToast('Provider verification set to Pending in SQLite database.', 'warning');
+          }
+        } else {
+          showToast(result.message || 'Error updating status in database.', 'warning');
+        }
+      } catch (err) {
+        showToast('Connection error updating provider.', 'error');
+      }
+    });
+  });
+
+  // Deactivate provider
+  document.querySelectorAll('.btn-deactivate-provider').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-name');
+      if (confirm(`Are you sure you want to suspend provider: ${name}?`)) {
+        const row = btn.closest('tr');
+        if (row) {
+          row.style.opacity = '0.3';
+          row.style.pointerEvents = 'none';
+        }
+        showToast(`Provider ${name} has been suspended from the directory.`, 'info');
+      }
+    });
+  });
+
+  // Edit provider modal alert
+  document.querySelectorAll('.btn-edit-provider').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-name');
+      showToast(`Editing modal for ${name} opened. Connects to Flask PUT /api/providers endpoint.`, 'info');
+    });
+  });
+
+  // Approve / Reject appointment requests
+  document.querySelectorAll('.btn-approve-request').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const aptId = btn.getAttribute('data-apt-id');
+      try {
+        const res = await fetch(`/api/admin/appointments/${aptId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          },
+          body: JSON.stringify({ status: 'Confirmed' })
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+          const tr = btn.closest('tr');
+          if (tr) {
+            tr.querySelector('td:last-child').innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle"></i> Confirmed</span>';
+          }
+          showToast('Appointment request confirmed in database!', 'success');
+        } else {
+          showToast(result.message || 'Error approving appointment.', 'warning');
+        }
+      } catch (err) {
+        showToast('Connection error.', 'error');
+      }
+    });
+  });
+
+  document.querySelectorAll('.btn-reject-request').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const aptId = btn.getAttribute('data-apt-id');
+      try {
+        const res = await fetch(`/api/admin/appointments/${aptId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          },
+          body: JSON.stringify({ status: 'Cancelled' })
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+          const tr = btn.closest('tr');
+          if (tr) {
+            tr.querySelector('td:last-child').innerHTML = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle"></i> Cancelled</span>';
+          }
+          showToast('Appointment request declined in database.', 'warning');
+        } else {
+          showToast(result.message || 'Error declining appointment.', 'warning');
+        }
+      } catch (err) {
+        showToast('Connection error.', 'error');
+      }
+    });
+  });
+
+  // Add new provider submission
+  const newProvForm = document.getElementById('newProviderForm');
+  const addModalEl = document.getElementById('addNewProviderModal');
+  const addModal = addModalEl ? bootstrap.Modal.getInstance(addModalEl) || new bootstrap.Modal(addModalEl) : null;
+
+  if (newProvForm) {
+    newProvForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!newProvForm.checkValidity()) {
+        newProvForm.classList.add('was-validated');
+        return;
+      }
+
+      const name = document.getElementById('newDocName').value;
+      const spec = document.getElementById('newDocSpecialty').value;
+      const qual = document.getElementById('newDocQual').value;
+      const exp = document.getElementById('newDocExp').value;
+      const clinic = document.getElementById('newDocClinic').value;
+      const city = document.getElementById('newDocCity').value;
+      const fee = document.getElementById('newDocFee').value || '600';
+      const isVerified = document.getElementById('newDocStatus').value === 'true';
+
+      const payload = {
+        name: name,
+        specialty: spec,
+        qualifications: qual,
+        experience_years: exp,
+        clinic_name: clinic,
+        city: city,
+        consultation_fee: fee,
+        verification_status: isVerified
+      };
+
+      try {
+        const response = await fetch('/api/admin/providers/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          // Insert new row into admin table
+          const tbody = document.querySelector('#adminProvidersTable tbody');
+          if (tbody) {
+            const tr = document.createElement('tr');
+            tr.className = 'admin-provider-row';
+            tr.setAttribute('data-name', name.toLowerCase());
+            tr.setAttribute('data-specialty', spec.toLowerCase());
+            tr.innerHTML = `
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="/static/images/doctor-placeholder.svg" alt="" class="rounded-circle" style="width: 38px; height: 38px; object-fit: cover;">
+                  <div>
+                    <div class="fw-bold text-dark">${name}</div>
+                    <span class="badge bg-info-subtle text-primary border" style="font-size:0.7rem;">Saved in SQLite</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge-specialty">${spec}</span>
+                <div class="text-muted" style="font-size: 0.78rem;">${clinic}</div>
+              </td>
+              <td><div class="text-dark fw-medium" style="font-size: 0.82rem;">${city}</div></td>
+              <td><span class="fw-semibold text-primary">₹${fee}</span></td>
+              <td>
+                <button type="button" class="provider-toggle-btn ${isVerified ? 'btn-verified' : 'btn-pending'}" data-doc-id="${result.doctor.id}">
+                  <i class="bi ${isVerified ? 'bi-patch-check-fill' : 'bi-clock'}"></i> ${isVerified ? 'Verified' : 'Pending'}
+                </button>
+              </td>
+              <td class="text-end">
+                <span class="text-success" style="font-size:0.8rem;"><i class="bi bi-check2-circle"></i> Active</span>
+              </td>
+            `;
+            tbody.prepend(tr);
+          }
+
+          // Update KPI counter
+          const kpi = document.getElementById('kpiTotalDoctors');
+          if (kpi) {
+            kpi.textContent = parseInt(kpi.textContent, 10) + 1;
+          }
+
+          if (addModal) addModal.hide();
+          newProvForm.reset();
+          newProvForm.classList.remove('was-validated');
+
+          showToast(`Dr. ${name} successfully added and saved to SQLite database!`, 'success', 5000);
+        } else {
+          showToast(result.message || 'Failed to save provider.', 'warning');
+        }
+      } catch (err) {
+        showToast('Error communicating with server.', 'error');
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

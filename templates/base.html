@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediNear AI — Smart Healthcare & Doctor Finder. Discover nearby verified doctors, hospitals, clinics and pharmacies with intelligent AI specialty assistance.">
+  <meta name="keywords" content="doctor finder, nearby hospital, 24x7 pharmacy, AI healthcare assistant, medical appointment, MediNear AI">
+  <meta name="author" content="MediNear AI Team">
+  <title>{% block title %}MediNear AI — Smart Healthcare & Doctor Finder{% endblock %}</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/logo.svg') }}">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Font Awesome 6.5.2 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- CSRF Protection Token for AJAX and Forms -->
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- MediNear Core CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Emergency Alert Notification Strip -->
+  <div class="bg-dark text-white py-1 px-3" style="font-size: 0.8rem; background-color: #0b1a28 !important;">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-danger text-uppercase px-2 py-1">Emergency Help</span>
+        <span>Medical emergency? Call Ambulance: <strong class="text-warning">108</strong> / National Helpline: <strong class="text-warning">112</strong></span>
+      </div>
+      <div class="d-none d-md-flex align-items-center gap-3 text-white-50">
+        <span><i class="bi bi-shield-check text-success"></i> 100% Verified Providers</span>
+        <span><i class="bi bi-geo-alt text-info"></i> Geolocation Enabled</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Bar -->
+  <nav class="navbar navbar-expand-lg medinear-navbar" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('index') }}" title="MediNear AI Home">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="MediNear AI Logo">
+      </a>
+
+      <!-- Emergency Hotline Quick Badge (Visible on Tablet/Desktop) -->
+      <a href="tel:108" class="emergency-hotline-pill ms-2 d-none d-sm-inline-flex" title="Emergency Ambulance Call 108">
+        <i class="bi bi-telephone-plus-fill"></i> Ambulance: 108
+      </a>
+
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="bi bi-list fs-2 text-dark"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('index') }}">
+              <i class="bi bi-house-door"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'doctors' %}active{% endif %}" href="{{ url_for('doctors') }}">
+              <i class="bi bi-person-badge"></i> Find Doctors
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'hospitals' %}active{% endif %}" href="{{ url_for('hospitals') }}">
+              <i class="bi bi-hospital"></i> Hospitals
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'pharmacies' %}active{% endif %}" href="{{ url_for('pharmacies') }}">
+              <i class="bi bi-capsule"></i> Pharmacies
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'ai_assistant' %}active{% endif %}" href="{{ url_for('ai_assistant') }}">
+              <i class="bi bi-stars text-primary"></i> AI Assistant
+            </a>
+          </li>
+        </ul>
+
+        <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+          {% if current_user %}
+            {% if current_user.role == 'admin' %}
+              <a href="{{ url_for('admin') }}" class="btn btn-warning btn-sm text-dark fw-semibold" title="Administrator Console">
+                <i class="bi bi-shield-shaded"></i> Admin
+              </a>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-teal btn-sm" title="Patient Dashboard">
+              <i class="bi bi-person-circle"></i> {{ current_user.name.split()[0] }}
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-light btn-sm text-danger border" title="Sign Out" aria-label="Sign Out">
+              <i class="bi bi-box-arrow-right"></i>
+            </a>
+          {% else %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-teal btn-sm" title="Patient Dashboard">
+              <i class="bi bi-calendar2-check"></i> Dashboard
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-primary-teal btn-sm" title="Sign In or Register">
+              <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Live Toast Container -->
+  <div class="medinear-toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Flash Messages from Flask -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container mt-3">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'success' if category == 'success' else 'info' if category == 'info' else 'warning' if category == 'warning' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main View Content -->
+  <main id="mainContent">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="medinear-footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="MediNear AI Logo" style="filter: brightness(0) invert(1); height: 38px;">
+          </div>
+          <p class="text-white-50 mb-3" style="font-size: 0.9rem;">
+            MediNear AI is an intelligent healthcare discovery platform connecting patients to verified doctors, 24/7 hospitals, diagnostics, and local pharmacies with AI-driven specialty triage.
+          </p>
+          <div class="d-flex gap-3 text-white-50 fs-5">
+            <a href="https://twitter.com" target="_blank" rel="noopener" class="text-white-50" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" class="text-white-50" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a href="https://github.com" target="_blank" rel="noopener" class="text-white-50" aria-label="GitHub"><i class="bi bi-github"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6 col-6">
+          <h5>Healthcare</h5>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('doctors') }}">Find Doctors</a></li>
+            <li><a href="{{ url_for('hospitals') }}">24/7 Hospitals</a></li>
+            <li><a href="{{ url_for('pharmacies') }}">Nearby Pharmacies</a></li>
+            <li><a href="{{ url_for('ai_assistant') }}">AI Specialty Triage</a></li>
+            <li><a href="{{ url_for('doctors') }}?specialty=General+Physician">General Physicians</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-6">
+          <h5>Patient Portal</h5>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('dashboard') }}">My Appointments</a></li>
+            <li><a href="{{ url_for('login') }}">Patient Login</a></li>
+            <li><a href="{{ url_for('register') }}">Create Account</a></li>
+            <li><a href="{{ url_for('admin') }}">Healthcare Admin</a></li>
+            <li><a href="tel:108" class="text-warning"><i class="bi bi-telephone-fill"></i> Emergency Helpline (108)</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <h5>Academic & Startup Project</h5>
+          <p class="text-white-50 mb-2" style="font-size: 0.85rem;">
+            Designed for BTech CSE (AI/ML) Major Project &amp; Digital Health Startup Prototype.
+          </p>
+          <div class="p-2 rounded bg-white bg-opacity-10 border border-white border-opacity-10 text-white-50" style="font-size: 0.78rem;">
+            <i class="bi bi-shield-lock-fill text-success"></i> Strict HIPAA/DISHA guidelines compliant design. Zero fake persistance in unverified demo mode.
+          </div>
+        </div>
+      </div>
+
+      <!-- Prominent Medical Disclaimer Banner -->
+      <div class="footer-disclaimer-box">
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0 mt-1"></i>
+          <div>
+            <strong>Medical Disclaimer &amp; Verification Notice:</strong>
+            MediNear AI is an informational discovery and navigation directory. It does NOT provide formal medical advice, medical diagnoses, or prescriptions. In the event of acute symptoms, chest discomfort, shortness of breath, or trauma, contact emergency medical response immediately (Call 108 or 112). Consultation fees, availability, and pharmacy inventory are subject to clinic confirmation.
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center pt-4 mt-4 border-top border-secondary border-opacity-25 text-white-50" style="font-size: 0.82rem;">
+        <div>&copy; 2026 MediNear AI. All rights reserved.</div>
+        <div class="d-flex gap-3 mt-2 mt-sm-0">
+          <a href="#" class="text-white-50">Privacy Policy</a>
+          <a href="#" class="text-white-50">Terms of Service</a>
+          <a href="#" class="text-white-50">Medical Verification Standards</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- MediNear Main Global Script -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

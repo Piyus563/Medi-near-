@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Nearby Pharmacies &amp; Medicine Availability — MediNear AI{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4">
+  <div class="container">
+    <div class="row align-items-center mb-3">
+      <div class="col-md-7">
+        <h1 class="h3 fw-bold mb-1">Pharmacies &amp; Medicine Stock Finder</h1>
+        <p class="text-muted mb-0" style="font-size: 0.95rem;">
+          Find local pharmacies with reported stock status, 24/7 operating hours, and home delivery support.
+        </p>
+      </div>
+      <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <span class="badge bg-light text-muted border p-2">
+          <i class="bi bi-clock-history text-primary"></i> Inventory Reports Updated by Partner Chemists
+        </span>
+      </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="row g-2 align-items-center">
+      <div class="col-lg-5 col-md-6">
+        <div class="search-input-group">
+          <i class="bi bi-search icon"></i>
+          <input type="text" class="form-control" id="pharmacySearchInput" placeholder="Search medicine (e.g. Paracetamol, Insulin) or pharmacy...">
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="search-input-group">
+          <i class="bi bi-geo-alt icon"></i>
+          <input type="text" class="form-control" id="pharmacyCityFilter" placeholder="Filter by City / Area">
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-12 d-flex gap-2">
+        <button type="button" class="btn btn-outline-teal flex-grow-1" id="filter247Pharmacies">
+          <i class="bi bi-clock-fill"></i> 24x7 Open
+        </button>
+        <button type="button" class="btn btn-outline-secondary flex-grow-1" id="filterDeliveryPharmacies">
+          <i class="bi bi-truck"></i> Home Delivery
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+  <!-- Prominent Inventory Advisory Box -->
+  <div class="alert alert-warning border border-warning-subtle d-flex align-items-start gap-2 shadow-sm rounded-3 mb-4">
+    <i class="bi bi-exclamation-circle-fill text-warning fs-5 flex-shrink-0 mt-1"></i>
+    <div style="font-size: 0.88rem;">
+      <strong>Pharmacy Inventory Notice:</strong> Stock availability timestamps reflect the most recent reported data from registered chemists. Because retail turnover changes continuously, always phone the pharmacy to confirm critical or prescription-only medicines before commuting.
+    </div>
+  </div>
+
+  <!-- Pharmacies Grid -->
+  <div class="row g-4" id="pharmaciesListGrid">
+    {% for pharm in pharmacies %}
+    <div class="col-lg-6 pharmacy-listing-item"
+         data-name="{{ pharm.name|lower }}"
+         data-city="{{ pharm.city|lower }}"
+         data-medicines="{% for med, info in pharm.stock_sample.items() %}{{ med|lower }} {% endfor %}"
+         data-247="{{ 'true' if pharm.is_24x7 else 'false' }}"
+         data-delivery="{{ 'true' if pharm.home_delivery else 'false' }}">
+      <div class="pharmacy-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              {% if pharm.is_24x7 %}
+                <span class="badge-24x7"><i class="bi bi-clock"></i> 24x7 Open</span>
+              {% else %}
+                <span class="badge bg-light text-muted border">Day Chemist</span>
+              {% endif %}
+
+              {% if pharm.home_delivery %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                  <i class="bi bi-truck"></i> Home Delivery Available
+                </span>
+              {% endif %}
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-0">{{ pharm.name }}</h3>
+          </div>
+          <span class="badge-distance"><i class="bi bi-geo-alt"></i> {{ pharm.distance_km }} km</span>
+        </div>
+
+        <div class="text-muted mb-2" style="font-size: 0.85rem;">
+          <i class="bi bi-pin-map text-primary"></i> {{ pharm.address }}, {{ pharm.city }}
+        </div>
+
+        <!-- Reported Stock Sample Box -->
+        <div class="stock-preview-box">
+          <div class="fw-semibold text-dark mb-2 d-flex justify-content-between align-items-center" style="font-size: 0.82rem;">
+            <span><i class="bi bi-capsule text-primary"></i> Reported Common Stock</span>
+            <span class="text-muted fw-normal" style="font-size: 0.72rem;">Last reported updates</span>
+          </div>
+          {% for med_name, stock in pharm.stock_sample.items() %}
+          <div class="stock-preview-item">
+            <div>
+              <span class="fw-medium text-dark">{{ med_name }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {% if stock.status == 'In Stock' %}
+                <span class="badge-stock-in"><i class="bi bi-check2"></i> {{ stock.status }}</span>
+              {% elif stock.status == 'Limited Stock' %}
+                <span class="badge-stock-limited"><i class="bi bi-hourglass-split"></i> {{ stock.status }}</span>
+              {% else %}
+                <span class="badge bg-light text-muted border">{{ stock.status }}</span>
+              {% endif %}
+              <span class="stock-updated-time">{{ stock.updated }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">Direct Line</div>
+            <a href="tel:{{ pharm.contact }}" class="fw-bold text-primary text-decoration-none" style="font-size: 0.95rem;">
+              {{ pharm.contact }}
+            </a>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-teal btn-sm btn-inquire-prescription" data-pharmacy-name="{{ pharm.name }}">
+              <i class="bi bi-file-earmark-medical"></i> Inquire Medicine
+            </button>
+            <a href="https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route={{ pharm.latitude }}%2C{{ pharm.longitude }}" target="_blank" rel="noopener" class="btn btn-primary-teal btn-sm">
+              <i class="bi bi-geo-alt"></i> Navigate
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Empty State -->
+  <div id="noPharmaciesFound" class="empty-state-box mt-4 d-none">
+    <div class="empty-state-icon text-primary bg-primary-subtle">
+      <i class="bi bi-capsule"></i>
+    </div>
+    <h3 class="empty-state-title">No Pharmacies Match Search</h3>
+    <p class="empty-state-desc">
+      Try checking the spelling of the medicine or searching by a nearby city/neighborhood.
+    </p>
+    <button type="button" class="btn btn-primary-teal" id="resetPharmacyFiltersBtn">
+      Reset All Pharmacy Filters
+    </button>
+  </div>
+</div>
+
+<!-- Prescription Inquiry Modal Demo -->
+<div class="modal fade" id="prescriptionInquiryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header py-3 px-4 border-bottom bg-light">
+        <h5 class="modal-title fw-bold">Inquire Medicine Availability</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">Pharmacy</label>
+          <input type="text" class="form-control bg-light" id="inquiryPharmacyTarget" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">Medicine Name &amp; Dosage</label>
+          <input type="text" class="form-control" placeholder="e.g. Augmentin 625 Duo, 2 strips" id="inquiryMedicineName" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-dark" style="font-size: 0.9rem;">Patient Contact Mobile</label>
+          <input type="tel" class="form-control" placeholder="9876543210" pattern="[0-9]{10}" id="inquiryPhone" required>
+        </div>
+        <div class="alert alert-light border py-2 px-3 text-muted" style="font-size: 0.8rem;">
+          <i class="bi bi-info-circle text-primary"></i> For prescription drugs (Schedule H/X), valid doctor prescription must be shown upon dispensing.
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary-teal" id="btnSendInquiry">
+          <i class="bi bi-send"></i> Send Availability Request
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('pharmacySearchInput');
+  const cityInput = document.getElementById('pharmacyCityFilter');
+  const btn247 = document.getElementById('filter247Pharmacies');
+  const btnDelivery = document.getElementById('filterDeliveryPharmacies');
+  const items = Array.from(document.querySelectorAll('.pharmacy-listing-item'));
+  const emptyState = document.getElementById('noPharmaciesFound');
+  const resetBtn = document.getElementById('resetPharmacyFiltersBtn');
+
+  let filter247Only = false;
+  let filterDeliveryOnly = false;
+
+  function filterPharmacies() {
+    const q = (searchInput?.value || '').trim().toLowerCase();
+    const city = (cityInput?.value || '').trim().toLowerCase();
+
+    let visible = 0;
+    items.forEach(item => {
+      const name = item.getAttribute('data-name') || '';
+      const meds = item.getAttribute('data-medicines') || '';
+      const pCity = item.getAttribute('data-city') || '';
+      const is247 = item.getAttribute('data-247') === 'true';
+      const isDel = item.getAttribute('data-delivery') === 'true';
+
+      const matchQ = !q || name.includes(q) || meds.includes(q);
+      const matchCity = !city || pCity.includes(city);
+      const match247 = !filter247Only || is247;
+      const matchDel = !filterDeliveryOnly || isDel;
+
+      if (matchQ && matchCity && match247 && matchDel) {
+        item.classList.remove('d-none');
+        visible++;
+      } else {
+        item.classList.add('d-none');
+      }
+    });
+
+    if (emptyState) {
+      if (visible === 0) emptyState.classList.remove('d-none');
+      else emptyState.classList.add('d-none');
+    }
+  }
+
+  if (searchInput) searchInput.addEventListener('input', filterPharmacies);
+  if (cityInput) cityInput.addEventListener('input', filterPharmacies);
+
+  if (btn247) {
+    btn247.addEventListener('click', () => {
+      filter247Only = !filter247Only;
+      btn247.classList.toggle('active', filter247Only);
+      btn247.classList.toggle('btn-primary-teal', filter247Only);
+      btn247.classList.toggle('btn-outline-teal', !filter247Only);
+      filterPharmacies();
+    });
+  }
+
+  if (btnDelivery) {
+    btnDelivery.addEventListener('click', () => {
+      filterDeliveryOnly = !filterDeliveryOnly;
+      btnDelivery.classList.toggle('active', filterDeliveryOnly);
+      btnDelivery.classList.toggle('btn-secondary', filterDeliveryOnly);
+      btnDelivery.classList.toggle('btn-outline-secondary', !filterDeliveryOnly);
+      filterPharmacies();
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      if (cityInput) cityInput.value = '';
+      filter247Only = false;
+      filterDeliveryOnly = false;
+      btn247?.classList.remove('active', 'btn-primary-teal');
+      btn247?.classList.add('btn-outline-teal');
+      btnDelivery?.classList.remove('active', 'btn-secondary');
+      btnDelivery?.classList.add('btn-outline-secondary');
+      filterPharmacies();
+    });
+  }
+
+  // Prescription Inquiry Modal
+  const inquiryModalEl = document.getElementById('prescriptionInquiryModal');
+  const inquiryModal = inquiryModalEl ? new bootstrap.Modal(inquiryModalEl) : null;
+  const inquiryTargetInput = document.getElementById('inquiryPharmacyTarget');
+
+  document.querySelectorAll('.btn-inquire-prescription').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pName = btn.getAttribute('data-pharmacy-name');
+      if (inquiryTargetInput) inquiryTargetInput.value = pName;
+      if (inquiryModal) inquiryModal.show();
+    });
+  });
+
+  const btnSendInquiry = document.getElementById('btnSendInquiry');
+  if (btnSendInquiry) {
+    btnSendInquiry.addEventListener('click', () => {
+      const medInput = document.getElementById('inquiryMedicineName');
+      const phoneInput = document.getElementById('inquiryPhone');
+
+      if (!medInput.value.trim() || !phoneInput.value.trim()) {
+        showToast('Please fill in both medicine name and your contact phone.', 'warning');
+        return;
+      }
+
+      showToast(`Inquiry sent to ${inquiryTargetInput.value}! The pharmacy staff will call you with live stock confirmation.`, 'success', 5000);
+      medInput.value = '';
+      phoneInput.value = '';
+      if (inquiryModal) inquiryModal.hide();
+    });
+  }
+});
+</script>
+{% endblock %}

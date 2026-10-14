@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+
+{% block title %}MediNear AI — Your Healthcare, Closer Than Ever{% endblock %}
+
+{% block content %}
+<!-- ===================================================================
+     Hero Section
+     =================================================================== -->
+<section class="hero-section text-center">
+  <div class="container">
+    <div class="hero-badge">
+      <i class="bi bi-stars"></i> Smart AI-Assisted Healthcare Discovery
+    </div>
+
+    <h1 class="hero-title">
+      Your Healthcare, <br class="d-none d-sm-inline">
+      <span class="highlight-teal">Closer Than Ever.</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Discover nearby verified doctors, 24/7 emergency hospitals, clinics and pharmacies in one unified platform — powered by intelligent specialty matching.
+    </p>
+
+    <!-- Main Search Card -->
+    <div class="main-search-card text-start">
+      <form action="{{ url_for('doctors') }}" method="GET" id="heroSearchForm">
+        <div class="row g-2 align-items-center">
+          <!-- Specialty / Provider Keyword Input -->
+          <div class="col-lg-5 col-md-6">
+            <label class="form-label visually-hidden" for="doctorSearchInput">Doctor or Specialty</label>
+            <div class="search-input-group">
+              <i class="bi bi-search icon"></i>
+              <input type="text" class="form-control" id="doctorSearchInput" name="q" placeholder="Doctor, specialty, or condition (e.g. Cardiologist)">
+            </div>
+          </div>
+
+          <!-- City / Location Input with Geolocation helper -->
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label visually-hidden" for="searchLocationInput">City or Area</label>
+            <div class="search-input-group">
+              <i class="bi bi-geo-alt icon"></i>
+              <input type="text" class="form-control pe-5" id="searchLocationInput" name="city" placeholder="City or locality (e.g. Delhi NCR)">
+              <button type="button" class="btn-locate-me position-absolute end-0 me-2" data-target-input="searchLocationInput" title="Detect your location">
+                <i class="bi bi-crosshair"></i> Auto
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="col-lg-3 col-md-12">
+            <button type="submit" class="btn btn-primary-teal w-100 py-2 h-100" style="min-height: 52px;">
+              <i class="bi bi-arrow-right-circle"></i> Find Healthcare
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Quick Search Helper Tags -->
+      <div class="d-flex align-items-center flex-wrap gap-2 mt-3 pt-2 border-top border-light" style="font-size: 0.82rem;">
+        <span class="text-muted fw-semibold"><i class="bi bi-lightning-charge text-warning"></i> Popular:</span>
+        <a href="{{ url_for('doctors') }}?specialty=General+Physician" class="badge rounded-pill bg-light text-dark text-decoration-none border px-2 py-1">General Physician</a>
+        <a href="{{ url_for('doctors') }}?specialty=Dentist" class="badge rounded-pill bg-light text-dark text-decoration-none border px-2 py-1">Dentist</a>
+        <a href="{{ url_for('doctors') }}?specialty=Dermatologist" class="badge rounded-pill bg-light text-dark text-decoration-none border px-2 py-1">Dermatologist</a>
+        <a href="{{ url_for('hospitals') }}" class="badge rounded-pill bg-danger-subtle text-danger text-decoration-none border px-2 py-1">24/7 ICU Hospitals</a>
+        <a href="{{ url_for('ai_assistant') }}" class="badge rounded-pill bg-info-subtle text-primary text-decoration-none border px-2 py-1"><i class="bi bi-stars"></i> Ask AI Assistant</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     Quick Category Section
+     =================================================================== -->
+<section class="py-5 bg-white border-bottom border-top">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <span class="text-uppercase text-primary fw-bold" style="font-size: 0.78rem; letter-spacing: 1px;">Top Specialties</span>
+        <h2 class="h3 fw-bold mb-0">Browse Healthcare Categories</h2>
+      </div>
+      <a href="{{ url_for('doctors') }}" class="text-primary fw-semibold" style="font-size: 0.9rem;">
+        Explore all specialties <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-3">
+      <!-- 1. General Physician -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=General+Physician" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-user-doctor"></i>
+          </div>
+          <div class="category-title">General Physician</div>
+          <div class="category-desc">Fever, flu, routine checkup</div>
+        </a>
+      </div>
+
+      <!-- 2. Dentist -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=Dentist" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-tooth"></i>
+          </div>
+          <div class="category-title">Dentist</div>
+          <div class="category-desc">Teeth, gums &amp; oral hygiene</div>
+        </a>
+      </div>
+
+      <!-- 3. Dermatologist -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=Dermatologist" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-hand-dots"></i>
+          </div>
+          <div class="category-title">Dermatologist</div>
+          <div class="category-desc">Skin allergies, acne, hair</div>
+        </a>
+      </div>
+
+      <!-- 4. Cardiologist -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=Cardiologist" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div class="category-title">Cardiologist</div>
+          <div class="category-desc">Heart health, BP, ECG</div>
+        </a>
+      </div>
+
+      <!-- 5. Eye Specialist -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=Eye+Specialist" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-eye"></i>
+          </div>
+          <div class="category-title">Eye Specialist</div>
+          <div class="category-desc">Vision check, strain, cornea</div>
+        </a>
+      </div>
+
+      <!-- 6. Pediatrician -->
+      <div class="col-lg-2 col-md-4 col-6">
+        <a href="{{ url_for('doctors') }}?specialty=Pediatrician" class="category-card">
+          <div class="category-icon-wrap">
+            <i class="fa-solid fa-baby"></i>
+          </div>
+          <div class="category-title">Pediatrician</div>
+          <div class="category-desc">Child nutrition &amp; vaccines</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     How It Works Section
+     =================================================================== -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-uppercase text-primary fw-bold" style="font-size: 0.78rem; letter-spacing: 1px;">Simple Process</span>
+      <h2 class="h3 fw-bold">How MediNear AI Works</h2>
+      <p class="text-muted">Fast, reliable access to healthcare providers in three intuitive steps.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="medinear-card p-4 h-100 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: 800;">
+            1
+          </div>
+          <h4 class="h5 fw-bold mb-2">Search or Ask AI</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">
+            Describe your symptoms to our AI Healthcare Assistant or search directly by specialty, doctor name, and locality.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="medinear-card p-4 h-100 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center bg-info-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: 800;">
+            2
+          </div>
+          <h4 class="h5 fw-bold mb-2">Compare &amp; Verify</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">
+            Review verified medical credentials, real patient ratings, consultation charges, proximity distance, and availability.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="medinear-card p-4 h-100 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: 800;">
+            3
+          </div>
+          <h4 class="h5 fw-bold mb-2">Book or Navigate</h4>
+          <p class="text-muted" style="font-size: 0.9rem;">
+            Request appointment time slots with one click or open turn-by-turn map directions directly to clinic and emergency centers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     Featured Doctors Section
+     =================================================================== -->
+<section class="py-5 bg-white border-top">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <span class="text-uppercase text-primary fw-bold" style="font-size: 0.78rem; letter-spacing: 1px;">Top Specialists</span>
+        <h2 class="h3 fw-bold mb-0">Featured Verified Doctors</h2>
+      </div>
+      <a href="{{ url_for('doctors') }}" class="btn btn-outline-teal btn-sm">
+        View All Doctors <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for doctor in featured_doctors %}
+      <div class="col-lg-4 col-md-6">
+        <div class="doctor-card">
+          <div class="doctor-header-row">
+            <div class="doctor-avatar-wrap">
+              <img src="{{ doctor.avatar }}" alt="{{ doctor.name }}">
+              {% if doctor.available_today %}
+                <span class="online-indicator" title="Available Today"></span>
+              {% endif %}
+            </div>
+            <div class="doctor-info-head">
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="badge-specialty">{{ doctor.specialty }}</span>
+                <button type="button" class="btn-favorite-heart" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.name }}" title="Save Doctor" aria-label="Save Doctor">
+                  <i class="bi bi-heart"></i>
+                </button>
+              </div>
+              <h3 class="doctor-name mt-1">
+                <a href="{{ url_for('doctor_details', doctor_id=doctor.id) }}" class="text-dark text-decoration-none">
+                  {{ doctor.name }}
+                </a>
+              </h3>
+              <div class="doctor-qualifications">{{ doctor.qualifications }}</div>
+              <div class="doctor-meta-strip">
+                <span class="doctor-rating"><i class="bi bi-star-fill"></i> {{ doctor.rating }} ({{ doctor.reviews_count }})</span>
+                <span>&bull;</span>
+                <span>{{ doctor.experience_years }} yrs exp</span>
+              </div>
+            </div>
+          </div>
+
+          {% if doctor.verification_status %}
+            <div class="mb-2">
+              <span class="badge-verified"><i class="bi bi-patch-check-fill"></i> Verified Medical Practitioner</span>
+            </div>
+          {% endif %}
+
+          <div class="doctor-clinic-box">
+            <div class="clinic-name">{{ doctor.clinic_name }}</div>
+            <div class="clinic-address">
+              <i class="bi bi-geo-alt-fill text-primary"></i>
+              <span>{{ doctor.clinic_address }}, {{ doctor.city }}</span>
+            </div>
+          </div>
+
+          <div class="doctor-availability {% if doctor.available_today %}availability-open{% else %}availability-closed{% endif %}">
+            <i class="bi {% if doctor.available_today %}bi-clock-fill text-success{% else %}bi-calendar-event text-secondary{% endif %}"></i>
+            <span>{{ doctor.availability_info }}</span>
+          </div>
+
+          <div class="doctor-card-footer">
+            <div class="consultation-fee-wrap">
+              <span class="fee-label">Consultation</span>
+              {% if doctor.consultation_fee %}
+                <span class="fee-amount">₹{{ doctor.consultation_fee }}</span>
+              {% else %}
+                <span class="fee-unverified">Inquire Clinic</span>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('doctor_details', doctor_id=doctor.id) }}" class="btn btn-outline-teal btn-sm">
+                Profile
+              </a>
+              <button type="button" class="btn btn-primary-teal btn-sm btn-request-appointment-modal" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.name }}" data-doctor-specialty="{{ doctor.specialty }}" data-doctor-fee="{{ doctor.consultation_fee }}">
+                Book
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     Nearby Hospitals & Pharmacies Preview
+     =================================================================== -->
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 align-items-stretch">
+      <!-- 24/7 Hospitals Highlight -->
+      <div class="col-lg-6">
+        <div class="medinear-card p-4 h-100 d-flex flex-direction-column">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-3 bg-danger-subtle text-danger fs-5">
+                <i class="bi bi-hospital"></i>
+              </div>
+              <h3 class="h5 fw-bold mb-0">Emergency Hospitals</h3>
+            </div>
+            <span class="badge-24x7"><i class="bi bi-shield-plus"></i> 24x7 Ready</span>
+          </div>
+          <p class="text-muted" style="font-size: 0.9rem;">
+            Quickly locate trauma units, intensive care facilities, and multi-specialty medical centers with live contact information.
+          </p>
+
+          <div class="border rounded-3 p-3 mb-3 bg-light">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="fw-bold mb-1">Apollo Multi-Specialty Hospital</h6>
+                <div class="text-muted" style="font-size: 0.82rem;"><i class="bi bi-geo-alt"></i> Sarita Vihar, Delhi Mathura Road</div>
+              </div>
+              <span class="badge-distance"><i class="bi bi-pin-map"></i> 3.2 km</span>
+            </div>
+            <div class="emergency-contact-box mt-2 py-1 px-2">
+              <span class="text-danger fw-semibold" style="font-size: 0.8rem;"><i class="bi bi-telephone-inbound-fill"></i> 24/7 Emergency Line</span>
+              <a href="tel:01126925858" class="emergency-contact-phone text-decoration-none">+91 11 2692 5858</a>
+            </div>
+          </div>
+
+          <div class="mt-auto pt-2">
+            <a href="{{ url_for('hospitals') }}" class="btn btn-outline-teal w-100">
+              <i class="bi bi-map"></i> View All Nearby Hospitals &amp; Map
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verified Pharmacies Highlight -->
+      <div class="col-lg-6">
+        <div class="medinear-card p-4 h-100 d-flex flex-direction-column">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-3 bg-success-subtle text-success fs-5">
+                <i class="bi bi-capsule"></i>
+              </div>
+              <h3 class="h5 fw-bold mb-0">Local Pharmacies &amp; Chemist</h3>
+            </div>
+            <span class="badge-verified"><i class="bi bi-check-circle"></i> Stock Verified</span>
+          </div>
+          <p class="text-muted" style="font-size: 0.9rem;">
+            Check verified medicine availability and stock updates before traveling to avoid out-of-stock disappointments.
+          </p>
+
+          <div class="border rounded-3 p-3 mb-3 bg-light">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="fw-bold mb-1">MedPlus 24x7 Pharmacy</h6>
+                <div class="text-muted" style="font-size: 0.82rem;"><i class="bi bi-geo-alt"></i> Sector 18 Market, Delhi NCR</div>
+              </div>
+              <span class="badge-distance"><i class="bi bi-pin-map"></i> 0.8 km</span>
+            </div>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+              <span class="badge-stock-in"><i class="bi bi-check2"></i> Paracetamol (In Stock)</span>
+              <span class="badge-stock-in"><i class="bi bi-check2"></i> Amoxicillin (In Stock)</span>
+              <span class="badge-stock-limited"><i class="bi bi-clock-history"></i> Azithromycin (Updated 1h ago)</span>
+            </div>
+          </div>
+
+          <div class="mt-auto pt-2">
+            <a href="{{ url_for('pharmacies') }}" class="btn btn-outline-teal w-100">
+              <i class="bi bi-capsule-pill"></i> Search Medicines &amp; Pharmacies
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     Benefits / Why MediNear AI Section
+     =================================================================== -->
+<section class="py-5 bg-white border-top">
+  <div class="container">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-uppercase text-primary fw-bold" style="font-size: 0.78rem; letter-spacing: 1px;">Why MediNear AI</span>
+      <h2 class="h3 fw-bold">Built for Trust, Speed &amp; Accuracy</h2>
+      <p class="text-muted">A modern healthcare directory engineered for patients, clinics, and emergency needs.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 text-center">
+          <div class="category-icon-wrap mb-3 text-primary bg-primary-subtle">
+            <i class="bi bi-shield-fill-check"></i>
+          </div>
+          <h5 class="fw-bold h6">100% Verified Providers</h5>
+          <p class="text-muted" style="font-size: 0.85rem;">
+            Only doctors with registered state and national medical council records are assigned verified status.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 text-center">
+          <div class="category-icon-wrap mb-3 text-info bg-info-subtle">
+            <i class="bi bi-cpu-fill"></i>
+          </div>
+          <h5 class="fw-bold h6">AI Specialty Triaging</h5>
+          <p class="text-muted" style="font-size: 0.85rem;">
+            Unsure who to visit? Describe symptoms to receive guidance on whether you need a GP, ENT, or Cardiologist.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 text-center">
+          <div class="category-icon-wrap mb-3 text-success bg-success-subtle">
+            <i class="bi bi-map-fill"></i>
+          </div>
+          <h5 class="fw-bold h6">Precise Distance Maps</h5>
+          <p class="text-muted" style="font-size: 0.85rem;">
+            Leaflet and OpenStreetMap integration gives accurate radial distances and route previews to clinics.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-sm-6">
+        <div class="p-3 text-center">
+          <div class="category-icon-wrap mb-3 text-warning bg-warning-subtle">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <h5 class="fw-bold h6">Zero Hidden Charges</h5>
+          <p class="text-muted" style="font-size: 0.85rem;">
+            Transparent consultation fees displayed directly where doctors have published verified rates.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Appointment Booking Modal (Shared) -->
+{% include 'components/appointment_modal.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/appointments.js') }}"></script>
+{% endblock %}

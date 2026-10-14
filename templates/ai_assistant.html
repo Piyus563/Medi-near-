@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Healthcare Assistant — Smart Specialty Triaging | MediNear AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- Intro Header -->
+      <div class="text-center mb-4">
+        <div class="badge-specialty mb-2">
+          <i class="bi bi-stars"></i> Intelligent Healthcare Navigator
+        </div>
+        <h1 class="h3 fw-bold">MediNear AI Healthcare Assistant</h1>
+        <p class="text-muted max-w-700 mx-auto" style="font-size: 0.92rem;">
+          Describe your health concern, symptoms, or area to receive intelligent guidance on which medical specialist to consult and view nearby verified practitioners.
+        </p>
+      </div>
+
+      <!-- Main AI Assistant Container -->
+      <div class="ai-assistant-wrapper">
+        <!-- Assistant Top Header Bar -->
+        <div class="ai-assistant-header">
+          <div class="ai-header-left">
+            <div class="ai-avatar-badge">
+              <i class="bi bi-robot"></i>
+            </div>
+            <div>
+              <div class="fw-bold fs-6">MediNear Triage Assistant</div>
+              <div class="ai-status-indicator" id="assistantStatusText">Active Healthcare Guide</div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <!-- Language Toggle UI (English / Hindi) -->
+            <div class="lang-toggle-group" id="langToggleGroup" role="group" aria-label="Language selection">
+              <button type="button" class="lang-btn active" data-lang="en">English</button>
+              <button type="button" class="lang-btn" data-lang="hi">हिन्दी</button>
+            </div>
+
+            <!-- Clear Conversation Button -->
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" id="btnClearChat" title="Reset conversation">
+              <i class="bi bi-trash3"></i> <span class="d-none d-sm-inline">Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mandatory Medical Disclaimer Banner -->
+        <div class="medical-disclaimer-alert">
+          <i class="bi bi-shield-exclamation text-warning fs-5 flex-shrink-0"></i>
+          <div>
+            <strong>Healthcare Navigation Notice:</strong> This assistant suggests medical specialties based on common symptoms to help you locate suitable doctors. It does <strong>NOT</strong> diagnose medical conditions or prescribe treatment. In an acute emergency, dial <strong>108 / 112</strong> immediately.
+          </div>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div class="chat-messages-container" id="chatMessagesFlow">
+          <!-- Initial Assistant Welcome Message -->
+          <div class="chat-bubble-wrap chat-bubble-ai">
+            <div class="chat-avatar-icon ai">
+              <i class="bi bi-stars"></i>
+            </div>
+            <div class="chat-bubble-content">
+              <p class="mb-2 fw-semibold text-dark">
+                Hello! I am your MediNear AI healthcare guide.
+              </p>
+              <p class="mb-2 text-secondary">
+                How can I assist you today? You can describe any symptoms you are experiencing, ask for a specialty recommendation (e.g. skin, heart, dental), or ask for emergency hospitals in your city.
+              </p>
+              <div class="ai-recommendation-card">
+                <div>
+                  <div class="fw-bold text-dark" style="font-size: 0.88rem;">Need quick specialty matching?</div>
+                  <div class="text-muted" style="font-size: 0.78rem;">Click one of the suggested prompts below to start.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing Indicator (Hidden by default) -->
+        <div id="aiTypingIndicator" class="px-4 py-2 bg-light border-top d-none">
+          <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.82rem;">
+            <div class="typing-dots">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+            <span>MediNear AI is analyzing specialty triage...</span>
+          </div>
+        </div>
+
+        <!-- Suggested Prompt Chips Tray -->
+        <div class="suggested-prompts-tray" id="suggestedPromptsTray">
+          <span class="text-muted fw-semibold me-1" style="font-size: 0.78rem;">Suggested:</span>
+          <button type="button" class="prompt-chip" data-prompt="Help me find a dermatologist for skin allergy">
+            <i class="bi bi-hand-dots"></i> Find a Dermatologist
+          </button>
+          <button type="button" class="prompt-chip" data-prompt="I have toothache and gum pain, find a dentist">
+            <i class="bi bi-bandaid"></i> Find a Nearby Dentist
+          </button>
+          <button type="button" class="prompt-chip" data-prompt="Find 24/7 emergency hospitals in my city">
+            <i class="bi bi-hospital"></i> Find Emergency Hospitals
+          </button>
+          <button type="button" class="prompt-chip" data-prompt="I have sudden acute chest pain and shortness of breath">
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i> Emergency Chest Pain
+          </button>
+          <button type="button" class="prompt-chip" data-prompt="Fever and body aches for two days">
+            <i class="bi bi-thermometer-half"></i> General Physician (Fever)
+          </button>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <form id="aiChatInputForm" class="chat-input-bar">
+          <input type="text" class="form-control" id="aiUserInput" placeholder="Type your symptoms or question (e.g. 'persistent dry cough', 'skin rash')..." autocomplete="off" required>
+          <button type="submit" class="btn-send-message" id="btnSendAiMessage" title="Send message" aria-label="Send message">
+            <i class="bi bi-send-fill"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ai_assistant.js') }}"></script>
+{% endblock %}

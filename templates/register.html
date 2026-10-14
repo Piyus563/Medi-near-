@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — MediNear AI Healthcare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="medinear-card p-4 p-sm-5 shadow-lg border-0">
+        <!-- Brand Header -->
+        <div class="text-center mb-4">
+          <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-3">
+            <i class="bi bi-person-plus-fill fs-3"></i>
+          </div>
+          <h1 class="h4 fw-bold text-dark">Join MediNear AI</h1>
+          <p class="text-muted" style="font-size: 0.88rem;">
+            Create your unified healthcare discovery account in less than a minute.
+          </p>
+        </div>
+
+        <!-- Form for Flask Route POST /register -->
+        <form action="{{ url_for('register') }}" method="POST" id="registerForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <!-- Role Selection Pills -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">I am registering as:</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="rolePatient" value="patient" checked>
+                <label class="btn btn-outline-teal w-100 py-2 d-flex flex-column align-items-center gap-1" for="rolePatient">
+                  <i class="bi bi-person-heart fs-5"></i>
+                  <span style="font-size: 0.85rem;">Patient / Seeker</span>
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="roleDoctor" value="doctor">
+                <label class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1" for="roleDoctor">
+                  <i class="bi bi-hospital fs-5"></i>
+                  <span style="font-size: 0.85rem;">Doctor / Provider</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label for="regName" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            <div class="search-input-group">
+              <i class="bi bi-person icon"></i>
+              <input type="text" class="form-control" id="regName" name="name" placeholder="e.g. Priya Sharma" required>
+            </div>
+            <div class="invalid-feedback">Please enter your legal name.</div>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="regEmail" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Email Address <span class="text-danger">*</span>
+            </label>
+            <div class="search-input-group">
+              <i class="bi bi-envelope icon"></i>
+              <input type="email" class="form-control" id="regEmail" name="email" placeholder="priya@example.com" required>
+            </div>
+            <div class="invalid-feedback">Please enter a valid email address.</div>
+          </div>
+
+          <!-- Mobile Phone -->
+          <div class="mb-3">
+            <label for="regPhone" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Mobile Phone Number <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted">+91</span>
+              <input type="tel" class="form-control" id="regPhone" name="phone" placeholder="98765 43210" pattern="[0-9]{10}" required>
+            </div>
+            <div class="invalid-feedback">Please enter a 10-digit mobile number.</div>
+          </div>
+
+          <!-- Password with reveal toggle -->
+          <div class="mb-3">
+            <label for="regPassword" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Password <span class="text-danger">*</span>
+            </label>
+            <div class="position-relative">
+              <div class="search-input-group">
+                <i class="bi bi-key icon"></i>
+                <input type="password" class="form-control pe-5" id="regPassword" name="password" placeholder="At least 6 characters" minlength="6" required>
+              </div>
+              <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none pe-3 toggle-password-visibility" data-target="regPassword" aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback">Password must be at least 6 characters long.</div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="mb-3">
+            <label for="regConfirmPassword" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Confirm Password <span class="text-danger">*</span>
+            </label>
+            <div class="search-input-group">
+              <i class="bi bi-shield-check icon"></i>
+              <input type="password" class="form-control" id="regConfirmPassword" placeholder="Re-enter password" required>
+            </div>
+            <div class="invalid-feedback" id="confirmPasswordFeedback">Passwords do not match.</div>
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="agreeTermsCheckbox" required>
+            <label class="form-check-label text-muted" for="agreeTermsCheckbox" style="font-size: 0.82rem;">
+              I agree to the <a href="#">Terms of Service</a> and confirm that MediNear AI provides navigation assistance, not direct diagnoses.
+            </label>
+            <div class="invalid-feedback">You must agree to continue.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-teal w-100 py-2" id="btnRegisterSubmit">
+            <i class="bi bi-person-check"></i> Complete Registration
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top" style="font-size: 0.88rem;">
+          <span class="text-muted">Already have a registered account?</span>
+          <a href="{{ url_for('login') }}" class="fw-semibold text-primary ms-1">Sign In Here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Password visibility toggle
+  document.querySelectorAll('.toggle-password-visibility').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="bi bi-eye"></i>';
+      }
+    });
+  });
+
+  // Client validation & password match check
+  const form = document.getElementById('registerForm');
+  const pwd = document.getElementById('regPassword');
+  const confirmPwd = document.getElementById('regConfirmPassword');
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      let valid = form.checkValidity();
+
+      if (pwd.value !== confirmPwd.value) {
+        confirmPwd.setCustomValidity('Passwords do not match');
+        valid = false;
+      } else {
+        confirmPwd.setCustomValidity('');
+      }
+
+      if (!valid) {
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated');
+      }
+    });
+
+    confirmPwd?.addEventListener('input', () => {
+      if (pwd.value !== confirmPwd.value) {
+        confirmPwd.setCustomValidity('Passwords do not match');
+      } else {
+        confirmPwd.setCustomValidity('');
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ doctor.name }} — {{ doctor.specialty }} Profile | MediNear AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb" style="font-size: 0.88rem;">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('doctors') }}">Doctors</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('doctors') }}?specialty={{ doctor.specialty }}">{{ doctor.specialty }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ doctor.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Left Column: Doctor Profile & Clinic Info -->
+    <div class="col-lg-8">
+      <!-- Main Doctor Overview Card -->
+      <div class="medinear-card p-4 mb-4">
+        <div class="d-flex flex-column flex-sm-row gap-4 align-items-start">
+          <div class="doctor-avatar-wrap" style="width: 100px; height: 100px;">
+            <img src="{{ doctor.avatar }}" alt="{{ doctor.name }}" class="w-100 h-100 rounded-circle border border-3 border-light shadow-sm">
+            {% if doctor.available_today %}
+              <span class="online-indicator" title="Available Today" style="width: 18px; height: 18px; bottom: 4px; right: 4px;"></span>
+            {% endif %}
+          </div>
+
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <span class="badge-specialty mb-2">{{ doctor.specialty }}</span>
+                <h1 class="h3 fw-bold mb-1">{{ doctor.name }}</h1>
+                <div class="text-secondary fw-medium mb-2">{{ doctor.qualifications }}</div>
+              </div>
+              <button type="button" class="btn-favorite-heart fs-4" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.name }}" title="Save Doctor" aria-label="Save Doctor">
+                <i class="bi bi-heart"></i>
+              </button>
+            </div>
+
+            <!-- Verification & Ratings Row -->
+            <div class="d-flex flex-wrap align-items-center gap-3 my-2">
+              {% if doctor.verification_status %}
+                <span class="badge-verified"><i class="bi bi-patch-check-fill"></i> Verified by State Medical Council</span>
+              {% else %}
+                <span class="badge-pending"><i class="bi bi-clock-history"></i> Verification In Progress</span>
+              {% endif %}
+
+              <span class="doctor-rating"><i class="bi bi-star-fill"></i> <strong>{{ doctor.rating }}</strong> ({{ doctor.reviews_count }} verified patient reviews)</span>
+              <span class="text-muted">&bull;</span>
+              <span class="text-muted"><i class="bi bi-briefcase"></i> {{ doctor.experience_years }}+ Years Clinical Experience</span>
+            </div>
+
+            <!-- Languages spoken -->
+            <div class="d-flex align-items-center gap-2 mt-2 text-muted" style="font-size: 0.85rem;">
+              <i class="bi bi-translate text-primary"></i>
+              <span>Fluent in: <strong>{{ doctor.languages|join(', ') }}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- About Doctor Section -->
+        <div class="border-top pt-4 mt-4">
+          <h2 class="h5 fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>About the Doctor</h2>
+          <p class="text-secondary leading-relaxed" style="font-size: 0.95rem;">
+            {{ doctor.about }}
+          </p>
+        </div>
+
+        <!-- Clinic & Contact Information -->
+        <div class="border-top pt-4 mt-4">
+          <h2 class="h5 fw-bold mb-3"><i class="bi bi-geo-alt text-primary me-2"></i>Clinic Location &amp; Hours</h2>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3">
+                <div class="fw-bold text-dark mb-1">{{ doctor.clinic_name }}</div>
+                <div class="text-muted mb-2" style="font-size: 0.88rem;">{{ doctor.clinic_address }}, {{ doctor.city }}</div>
+                <div class="badge-distance"><i class="bi bi-pin-map"></i> Approx {{ doctor.distance_km }} km away from your area</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3">
+                <div class="fw-bold text-dark mb-1">Consultation Timing</div>
+                <div class="text-success fw-medium mb-1" style="font-size: 0.88rem;">
+                  <i class="bi bi-clock"></i> {{ doctor.availability_info }}
+                </div>
+                <div class="text-muted" style="font-size: 0.8rem;">
+                  Mon – Sat (Appointments mandatory)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Inquiries -->
+          <div class="d-flex flex-wrap gap-3 mt-3 pt-2">
+            <a href="tel:{{ doctor.phone }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-telephone"></i> Call Clinic: {{ doctor.phone }}
+            </a>
+            <a href="mailto:{{ doctor.email }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-envelope"></i> Email Inquiries
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Leaflet Map for Clinic -->
+      <div class="medinear-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 fw-bold mb-0"><i class="bi bi-map text-primary me-2"></i>Clinic Route &amp; Map</h2>
+          <a href="https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route={{ doctor.latitude }}%2C{{ doctor.longitude }}" target="_blank" rel="noopener" class="btn btn-outline-teal btn-sm">
+            <i class="bi bi-signpost-2"></i> Get Turn-by-Turn Directions
+          </a>
+        </div>
+        <div class="map-card-container">
+          <div id="doctorClinicMap" data-lat="{{ doctor.latitude }}" data-lng="{{ doctor.longitude }}" data-title="{{ doctor.clinic_name }}"></div>
+        </div>
+      </div>
+
+      <!-- Similar Doctors Section -->
+      <div class="medinear-card p-4">
+        <h2 class="h5 fw-bold mb-3"><i class="bi bi-people text-primary me-2"></i>Other {{ doctor.specialty }}s You May Consider</h2>
+        <div class="row g-3">
+          {% for sim in similar_doctors %}
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3 h-100 d-flex gap-3 align-items-center bg-light">
+              <img src="{{ sim.avatar }}" alt="{{ sim.name }}" class="rounded-circle" style="width: 52px; height: 52px; object-fit: cover;">
+              <div class="flex-grow-1">
+                <h6 class="fw-bold mb-0">
+                  <a href="{{ url_for('doctor_details', doctor_id=sim.id) }}" class="text-dark text-decoration-none">
+                    {{ sim.name }}
+                  </a>
+                </h6>
+                <div class="text-muted" style="font-size: 0.8rem;">{{ sim.clinic_name }}</div>
+                <div class="text-primary fw-semibold" style="font-size: 0.82rem;">₹{{ sim.consultation_fee or 'Inquire' }} &bull; {{ sim.distance_km }} km</div>
+              </div>
+              <a href="{{ url_for('doctor_details', doctor_id=sim.id) }}" class="btn btn-outline-teal btn-sm" title="View Profile">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Appointment Booking Card -->
+    <div class="col-lg-4">
+      <div class="medinear-card p-4 sticky-top" style="top: 90px; z-index: 1020;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Consultation Fee</span>
+          {% if doctor.consultation_fee %}
+            <span class="h4 fw-bold text-primary mb-0">₹{{ doctor.consultation_fee }}</span>
+          {% else %}
+            <span class="badge bg-secondary">Fee Upon Clinic Review</span>
+          {% endif %}
+        </div>
+
+        <div class="alert alert-light border py-2 px-3 mb-3 text-muted" style="font-size: 0.82rem;">
+          <i class="bi bi-calendar-check text-success me-1"></i>
+          <span>Instant booking confirmation. No prepayment required.</span>
+        </div>
+
+        <!-- Appointment Form Directly on Details Page -->
+        <form id="inlineAppointmentForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+          <input type="hidden" id="detailsDoctorName" value="{{ doctor.name }}">
+          <input type="hidden" id="detailsDoctorSpecialty" value="{{ doctor.specialty }}">
+          <input type="hidden" id="detailsDoctorFee" value="₹{{ doctor.consultation_fee or 600 }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Patient Full Name</label>
+            <input type="text" class="form-control" name="patient_name" placeholder="e.g. Arun Kumar" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Contact Mobile (+91)</label>
+            <input type="tel" class="form-control" name="patient_phone" placeholder="9876543210" pattern="[0-9]{10}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Consultation Mode</label>
+            <select class="form-select" name="mode">
+              <option value="In-Person Clinic Visit">In-Person Clinic Visit</option>
+              <option value="Video Teleconsultation">Video Teleconsultation</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Preferred Date</label>
+            <input type="date" class="form-control" id="detailsDateInput" name="date" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">Select Time Slot</label>
+            <div class="d-flex flex-wrap gap-2">
+              <input type="radio" class="btn-check" name="time_slot" id="slotDetail1" value="10:00 AM" checked>
+              <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slotDetail1">10:00 AM</label>
+
+              <input type="radio" class="btn-check" name="time_slot" id="slotDetail2" value="11:30 AM">
+              <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slotDetail2">11:30 AM</label>
+
+              <input type="radio" class="btn-check" name="time_slot" id="slotDetail3" value="04:30 PM">
+              <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slotDetail3">04:30 PM</label>
+
+              <input type="radio" class="btn-check" name="time_slot" id="slotDetail4" value="06:30 PM">
+              <label class="btn btn-outline-secondary btn-sm rounded-pill" for="slotDetail4">06:30 PM</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-teal w-100 py-2 mt-2" id="btnSubmitInlineAppointment">
+            <i class="bi bi-calendar-plus-fill"></i> Request Appointment
+          </button>
+        </form>
+
+        <div class="mt-3 pt-3 border-top text-center text-muted" style="font-size: 0.78rem;">
+          <i class="bi bi-shield-lock"></i> Protected by MediNear Patient Privacy Policy
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/appointments.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize date constraint
+  const dInput = document.getElementById('detailsDateInput');
+  if (dInput) {
+    const today = new Date();
+    dInput.min = today.toISOString().split('T')[0];
+    dInput.value = today.toISOString().split('T')[0];
+  }
+
+  // Initialize Leaflet Map for Doctor Clinic
+  const mapElem = document.getElementById('doctorClinicMap');
+  if (mapElem && typeof L !== 'undefined') {
+    const lat = parseFloat(mapElem.getAttribute('data-lat')) || 28.5700;
+    const lng = parseFloat(mapElem.getAttribute('data-lng')) || 77.3200;
+    const title = mapElem.getAttribute('data-title') || 'Clinic';
+
+    const map = L.map('doctorClinicMap').setView([lat, lng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marker = L.marker([lat, lng]).addTo(map);
+    marker.bindPopup(`<b>${title}</b><br>{{ doctor.clinic_address }}`).openPopup();
+  }
+
+  // Inline appointment handler
+  const inlineForm = document.getElementById('inlineAppointmentForm');
+  if (inlineForm) {
+    inlineForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!inlineForm.checkValidity()) {
+        inlineForm.classList.add('was-validated');
+        return;
+      }
+
+      const btn = document.getElementById('btnSubmitInlineAppointment');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Booking...';
+
+      const formData = new FormData(inlineForm);
+      const apptData = {
+        doctor_id: formData.get('doctor_id'),
+        doctor_name: document.getElementById('detailsDoctorName').value,
+        specialty: document.getElementById('detailsDoctorSpecialty').value,
+        patient_name: formData.get('patient_name'),
+        patient_phone: formData.get('patient_phone'),
+        mode: formData.get('mode'),
+        date: formData.get('date'),
+        time_slot: formData.get('time_slot'),
+        fee: document.getElementById('detailsDoctorFee').value
+      };
+
+      try {
+        const res = await fetch('/api/appointments/request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
+          },
+          body: JSON.stringify(apptData)
+        });
+        const resJson = await res.json();
+        if (!res.ok || !resJson.success) {
+          showToast(resJson.message || 'Slot unavailable. Please select another time or date.', 'warning', 6000);
+          return;
+        }
+        showToast(resJson.message || `Appointment confirmed for ${apptData.doctor_name}! Visit your Dashboard to view details.`, 'success', 5000);
+        inlineForm.reset();
+        inlineForm.classList.remove('was-validated');
+      } catch (err) {
+        showToast('Connection error. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-calendar-plus-fill"></i> Request Appointment';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

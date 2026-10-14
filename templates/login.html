@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — MediNear AI Healthcare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="medinear-card p-4 p-sm-5 shadow-lg border-0">
+        <!-- Brand Header -->
+        <div class="text-center mb-4">
+          <div class="d-inline-flex p-3 rounded-circle bg-primary-subtle text-primary mb-3">
+            <i class="bi bi-shield-lock-fill fs-3"></i>
+          </div>
+          <h1 class="h4 fw-bold text-dark">Welcome to MediNear AI</h1>
+          <p class="text-muted" style="font-size: 0.88rem;">
+            Sign in to access your appointments, saved doctors, and health inquiries.
+          </p>
+        </div>
+
+        <!-- Form for Flask Route POST /login -->
+        <form action="{{ url_for('login') }}" method="POST" id="loginForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% if request.args.get('next') %}
+            <input type="hidden" name="next" value="{{ request.args.get('next') }}"/>
+          {% endif %}
+          <div class="mb-3">
+            <label for="loginEmail" class="form-label fw-semibold text-dark" style="font-size: 0.88rem;">
+              Email Address
+            </label>
+            <div class="search-input-group">
+              <i class="bi bi-envelope icon"></i>
+              <input type="email" class="form-control" id="loginEmail" name="email" placeholder="patient@example.com" required autocomplete="email">
+            </div>
+            <div class="invalid-feedback">Please enter a valid email address.</div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="loginPassword" class="form-label fw-semibold text-dark mb-0" style="font-size: 0.88rem;">
+                Password
+              </label>
+              <a href="#" class="text-muted" style="font-size: 0.78rem;" onclick="showToast('Password reset link will be sent to your registered email via Flask backend.', 'info');">Forgot Password?</a>
+            </div>
+            <div class="position-relative">
+              <div class="search-input-group">
+                <i class="bi bi-key icon"></i>
+                <input type="password" class="form-control pe-5" id="loginPassword" name="password" placeholder="••••••••" required autocomplete="current-password">
+              </div>
+              <button type="button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none pe-3 toggle-password-visibility" data-target="loginPassword" aria-label="Toggle password visibility">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback">Please enter your password.</div>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMeCheckbox" name="remember">
+              <label class="form-check-label text-muted" for="rememberMeCheckbox" style="font-size: 0.85rem;">
+                Remember my login
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-teal w-100 py-2" id="btnLoginSubmit">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In to Account
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top" style="font-size: 0.88rem;">
+          <span class="text-muted">Don't have a MediNear account?</span>
+          <a href="{{ url_for('register') }}" class="fw-semibold text-primary ms-1">Register Now</a>
+        </div>
+
+        <!-- Quick Demo Credentials helper box -->
+        <div class="alert alert-light border mt-4 mb-0 py-2 px-3 text-muted" style="font-size: 0.8rem;">
+          <div class="fw-semibold text-dark"><i class="bi bi-info-circle text-primary"></i> Demo Sign-in Note:</div>
+          <div>Submit any email/password to test Flask route redirect, or click <a href="{{ url_for('dashboard') }}" class="fw-bold text-primary">Patient Dashboard</a> / <a href="{{ url_for('admin') }}" class="fw-bold text-secondary">Admin Dashboard</a> directly.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Password visibility toggle
+  document.querySelectorAll('.toggle-password-visibility').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+      } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="bi bi-eye"></i>';
+      }
+    });
+  });
+
+  // Client validation
+  const form = document.getElementById('loginForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated');
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
